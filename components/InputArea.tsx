@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 
 interface InputAreaProps {
@@ -30,7 +29,7 @@ const InputArea: React.FC<InputAreaProps> = ({ onSendMessage, isLoading }) => {
   useEffect(() => {
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
-      textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 150)}px`;
+      textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 120)}px`;
     }
   }, [input]);
 
@@ -42,7 +41,7 @@ const InputArea: React.FC<InputAreaProps> = ({ onSendMessage, isLoading }) => {
 
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SpeechRecognition) {
-      alert("Voice recognition is not supported in this browser.");
+      alert("Voice protocols are not enabled on this browser.");
       return;
     }
 
@@ -63,25 +62,27 @@ const InputArea: React.FC<InputAreaProps> = ({ onSendMessage, isLoading }) => {
   };
 
   return (
-    <div className="border-t border-slate-200 dark:border-slate-800 p-4 bg-white dark:bg-slate-900">
-      <form onSubmit={handleSubmit} className="relative flex items-end gap-2 max-w-4xl mx-auto">
+    <div className="bg-transparent">
+      <form onSubmit={handleSubmit} className="relative flex items-end gap-3 max-w-4xl mx-auto">
         <button
           type="button"
           onClick={toggleListening}
-          className={`p-4 rounded-xl transition-all border flex-shrink-0 ${
+          className={`w-14 h-14 rounded-2xl transition-all flex-shrink-0 flex items-center justify-center border-2 ${
             isListening 
-              ? 'bg-red-500 border-red-500 text-white animate-pulse' 
-              : 'bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:border-indigo-500 hover:text-indigo-600'
+              ? 'bg-red-500 border-red-500 text-white shadow-lg shadow-red-500/30' 
+              : 'bg-slate-50 border-slate-100 text-slate-400 hover:border-emerald-500 hover:text-emerald-600'
           }`}
-          title={isListening ? "Stop listening" : "Start voice input"}
+          title={isListening ? "Deactivate Mic" : "Activate Voice Control"}
         >
           {isListening ? (
-            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-              <path d="M10 18a8 8 0 100-16 8 8 0 000 16zM8 7a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1H9a1 1 0 01-1-1V7z" />
-            </svg>
+            <div className="flex gap-0.5 items-center">
+              <div className="w-1 h-3 bg-white animate-pulse"></div>
+              <div className="w-1 h-5 bg-white animate-pulse delay-75"></div>
+              <div className="w-1 h-3 bg-white animate-pulse delay-150"></div>
+            </div>
           ) : (
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
             </svg>
           )}
         </button>
@@ -93,32 +94,28 @@ const InputArea: React.FC<InputAreaProps> = ({ onSendMessage, isLoading }) => {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Type or speak your message..."
-            className="w-full bg-slate-50 dark:bg-slate-800/50 text-slate-900 dark:text-slate-100 rounded-xl px-4 py-4 pr-14 border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500 transition-all resize-none min-h-[56px]"
+            placeholder="Describe your inquiry..."
+            className="w-full bg-slate-50 text-slate-800 rounded-2xl px-5 py-4 pr-16 border-2 border-slate-50 focus:outline-none focus:border-emerald-500/20 focus:bg-white transition-all resize-none min-h-[56px] font-medium text-[15px]"
             disabled={isLoading}
           />
-          <div className="absolute right-2 bottom-2">
+          <div className="absolute right-3 bottom-3">
             <button
               type="submit"
               disabled={!input.trim() || isLoading}
-              className={`p-2.5 rounded-lg transition-all ${
+              className={`p-2 rounded-xl transition-all ${
                 input.trim() && !isLoading
-                  ? 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-md'
-                  : 'bg-slate-100 dark:bg-slate-700 text-slate-400 cursor-not-allowed'
+                  ? 'bg-emerald-600 text-white hover:bg-emerald-700 shadow-lg shadow-emerald-500/20'
+                  : 'bg-slate-200 text-white cursor-not-allowed opacity-0 scale-75'
               }`}
-              aria-label="Send message"
             >
-              {isLoading ? (
-                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-              ) : (
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                </svg>
-              )}
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 12h14M12 5l7 7-7 7" />
+              </svg>
             </button>
           </div>
         </div>
       </form>
+      <p className="text-center text-[9px] text-slate-300 mt-4 font-black uppercase tracking-[0.2em]">End-to-End Encrypted Concierge Service</p>
     </div>
   );
 };
