@@ -1,5 +1,5 @@
 import { GoogleGenAI, GenerateContentResponse, FunctionDeclaration, Type } from "@google/genai";
-import { ICT_SYSTEM_INSTRUCTION } from "../constants";
+import { ICT_SYSTEM_INSTRUCTION } from "../ict-core";
 
 const submitLeadFolder: FunctionDeclaration = {
   name: 'submitLead',
@@ -72,7 +72,7 @@ export class GeminiService {
       }
 
       return { 
-        text: text || (leadCaptured ? "I've received your information and sent it to our team. Thank you!" : "I'm sorry, I'm having trouble processing that right now."), 
+        text: text || (leadCaptured ? "Intelligence Received. I've transmitted your details to the ICT team for priority follow-up." : "Neural link interrupted. Please restate your request."), 
         sources: this.deduplicateSources(sources),
         leadCaptured
       };
