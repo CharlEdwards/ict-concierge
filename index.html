@@ -6,10 +6,10 @@
     <title>ICT Concierge | High-Performance AI</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
       body {
-        font-family: 'Inter', sans-serif;
+        font-family: 'Plus Jakarta Sans', sans-serif;
         margin: 0;
         padding: 0;
         background-color: #020617;
@@ -40,13 +40,13 @@
       }
       .fade-out { opacity: 0; pointer-events: none; }
     </style>
-  
+
 </head>
   <body>
     <!-- App Loading State -->
     <div id="loading-overlay">
       <div class="ict-dot"></div>
-      <p style="color: #64748b; font-size: 11px; font-weight: 800; margin-top: 24px; letter-spacing: 0.3em; text-transform: uppercase;">ICT Elite Engine V12.0</p>
+      <p style="color: #64748b; font-size: 11px; font-weight: 800; margin-top: 24px; letter-spacing: 0.3em; text-transform: uppercase;">ICT Elite Engine V16.0</p>
     </div>
     
     <div id="root"></div>
@@ -56,8 +56,10 @@
         const overlay = document.getElementById('loading-overlay');
         if (overlay) overlay.classList.add('fade-out');
       };
-      // Hide loader once components are ready
-      setTimeout(window.hideICTLoader, 3000);
+      // Auto-hide if React takes too long to mount
+      setTimeout(() => {
+        if(window.hideICTLoader) window.hideICTLoader();
+      }, 4000);
     </script>
     
     <script type="module" src="/index.tsx"></script>
