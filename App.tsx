@@ -4,11 +4,11 @@ import { geminiService } from './services/geminiService';
 import MessageItem from './components/MessageItem';
 import InputArea from './components/InputArea';
 
-const APP_VERSION = "v5.1";
+const APP_VERSION = "v5.7";
 const LEAD_WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbz3a0ARGJX90pzAGySe0mrqxdLlN3w7ioUWWkUw2lMwEQ9p7iRuvKkM0X0owKNKyZQm/exec"; 
 
 const checkApiKeyPresence = (): boolean => {
-  // Check common env variable locations
+  // Check common env variable locations for both Vite and generic process environments
   const key = (process.env.API_KEY) || (import.meta as any).env?.VITE_API_KEY;
   return !!key;
 };
@@ -73,14 +73,14 @@ const App: React.FC = () => {
       setMessages((prev) => [...prev, botMsg]);
       
       if (response.leadCaptured && LEAD_WEBHOOK_URL) {
-        console.log("Lead captured:", response.leadCaptured);
         fetch(LEAD_WEBHOOK_URL, {
           method: 'POST',
           mode: 'no-cors',
           body: JSON.stringify({ 
             ...response.leadCaptured, 
             capturedAt: new Date().toISOString(), 
-            source: `ICT_CONCIERGE_${APP_VERSION}` 
+            source: `ICT_CONCIERGE_${APP_VERSION}`,
+            platform: "Vercel_Web"
           }),
           headers: { 'Content-Type': 'application/json' }
         }).catch((e) => console.error("Webhook error:", e));
@@ -89,7 +89,7 @@ const App: React.FC = () => {
       if (err.message === "API_KEY_MISSING") {
         setHasKey(false);
       } else {
-        setError("I'm currently adjusting my circuits. Please try again in a moment.");
+        setError("I'm experiencing a high volume of requests. Please try again in a few seconds.");
       }
     } finally {
       setIsLoading(false);
@@ -111,7 +111,7 @@ const App: React.FC = () => {
           </div>
           <div className="bg-slate-50 rounded-3xl p-6 text-left border border-slate-100">
             <p className="text-xs text-slate-600 leading-relaxed font-medium">
-              The application is deployed, but the API Key is not detected. Please add <strong>API_KEY</strong> to Vercel Environment Variables and <strong>Redeploy</strong>.
+              The application is deployed, but the API Key is not detected. Please verify <strong>API_KEY</strong> exists in Vercel Environment Variables and perform a <strong>Redeploy</strong>.
             </p>
           </div>
           <button onClick={() => window.location.reload()} className="w-full bg-slate-900 text-white font-black text-xs py-5 rounded-2xl shadow-xl hover:bg-slate-800 transition-all uppercase tracking-widest active:scale-95">
