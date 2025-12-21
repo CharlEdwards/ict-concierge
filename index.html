@@ -3,16 +3,17 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ICT Concierge | Inner City Technology</title>
+    <title>ICT Concierge | High-Performance AI</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
       body {
         font-family: 'Inter', sans-serif;
         margin: 0;
         padding: 0;
         background-color: #020617;
+        overflow-x: hidden;
       }
       #loading-overlay {
         position: fixed;
@@ -22,30 +23,29 @@
         align-items: center;
         justify-content: center;
         z-index: 9999;
-        background: #020617;
-        transition: opacity 0.5s ease;
+        background: radial-gradient(circle at center, #0f172a 0%, #020617 100%);
+        transition: opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1);
       }
       .ict-dot {
-        width: 14px;
-        height: 14px;
+        width: 16px;
+        height: 16px;
         background: #10b981;
         border-radius: 50%;
-        animation: pulse 1.5s infinite;
+        animation: pulse 2s infinite ease-in-out;
       }
       @keyframes pulse {
-        0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
-        70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); }
-        100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+        0% { transform: scale(0.9); opacity: 0.5; box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); }
+        50% { transform: scale(1.1); opacity: 1; box-shadow: 0 0 20px 10px rgba(16, 185, 129, 0); }
+        100% { transform: scale(0.9); opacity: 0.5; box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); }
       }
       .fade-out { opacity: 0; pointer-events: none; }
-    </style>
   
 </head>
   <body>
     <!-- App Loading State -->
     <div id="loading-overlay">
       <div class="ict-dot"></div>
-      <p style="color: #475569; font-size: 10px; font-weight: 700; margin-top: 24px; letter-spacing: 0.2em; text-transform: uppercase;">Booting ICT Concierge V6.9</p>
+      <p style="color: #64748b; font-size: 11px; font-weight: 800; margin-top: 24px; letter-spacing: 0.3em; text-transform: uppercase;">ICT Elite Engine V7.0</p>
     </div>
     
     <div id="root"></div>
@@ -55,11 +55,10 @@
         const overlay = document.getElementById('loading-overlay');
         if (overlay) overlay.classList.add('fade-out');
       };
-      // Safety timeout
-      setTimeout(window.hideICTLoader, 5000);
+      // Safety timeout for web app load
+      setTimeout(window.hideICTLoader, 3000);
     </script>
     
-    <!-- Vite Module Entry -->
     <script type="module" src="/index.tsx"></script>
   </body>
 </html>

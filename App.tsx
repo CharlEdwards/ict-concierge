@@ -1,15 +1,15 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Message, Role } from './types';
 import { geminiService } from './services/geminiService';
+import { SUGGESTED_QUESTIONS } from './constants';
 import MessageItem from './components/MessageItem';
 import InputArea from './components/InputArea';
 
-const APP_VERSION = "v6.9";
+const APP_VERSION = "v7.0 Elite";
 const LEAD_WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbz3a0ARGJX90pzAGySe0mrqxdLlN3w7ioUWWkUw2lMwEQ9p7iRuvKkM0X0owKNKyZQm/exec"; 
 
 const checkApiKeyPresence = (): boolean => {
-  const key = (process.env.API_KEY) || (import.meta as any).env?.VITE_API_KEY;
-  return !!key;
+  return !!(process.env.API_KEY || (import.meta as any).env?.VITE_API_KEY);
 };
 
 const App: React.FC = () => {
@@ -19,7 +19,7 @@ const App: React.FC = () => {
     {
       id: 'welcome',
       role: Role.BOT,
-      text: "Hello! I'm the Inner City Technology Concierge. I can help you with IT certifications, managed services, or getting your team trained. How can I serve you today?",
+      text: "Greetings. I am the ICT Elite Concierge. How may I assist with your IT certification or managed service needs today?",
       timestamp: Date.now(),
     },
   ]);
@@ -28,8 +28,7 @@ const App: React.FC = () => {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const keyExists = checkApiKeyPresence();
-    setHasKey(keyExists);
+    setHasKey(checkApiKeyPresence());
     if ((window as any).hideICTLoader) (window as any).hideICTLoader();
   }, []);
 
@@ -79,16 +78,16 @@ const App: React.FC = () => {
             ...response.leadCaptured, 
             capturedAt: new Date().toISOString(), 
             source: `ICT_CONCIERGE_${APP_VERSION}`,
-            platform: "Vercel_Web"
+            environment: "Production_V7"
           }),
           headers: { 'Content-Type': 'application/json' }
-        }).catch((e) => console.error("Webhook error:", e));
+        }).catch((e) => console.error("Webhook submission error:", e));
       }
     } catch (err: any) {
       if (err.message === "API_KEY_MISSING") {
         setHasKey(false);
       } else {
-        setError("I'm experiencing a high volume of requests. Please try again in a few seconds.");
+        setError("Network optimization in progress. Please retry in a moment.");
       }
     } finally {
       setIsLoading(false);
@@ -97,75 +96,86 @@ const App: React.FC = () => {
 
   if (!hasKey) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-[#020617] p-6 text-slate-900">
-        <div className="max-w-md w-full bg-white rounded-[2.5rem] shadow-2xl p-10 text-center space-y-8">
-          <div className="w-20 h-20 bg-emerald-50 text-emerald-600 rounded-3xl flex items-center justify-center mx-auto shadow-inner">
-            <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 00-2 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-            </svg>
+      <div className="flex items-center justify-center min-h-screen bg-[#020617] p-8">
+        <div className="max-w-md w-full bg-white rounded-[3rem] shadow-[0_40px_100px_-20px_rgba(0,0,0,0.5)] p-12 text-center border border-white/20">
+          <div className="w-24 h-24 bg-emerald-50 text-emerald-600 rounded-[2rem] flex items-center justify-center mx-auto mb-8 shadow-inner">
+            <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 00-2 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
           </div>
-          <div className="space-y-2">
-            <h2 className="text-3xl font-black tracking-tight leading-none">Security Gate</h2>
-            <p className="text-sm text-slate-500 font-bold uppercase tracking-widest opacity-60">Status: App Ready / Key Missing</p>
-          </div>
-          <div className="bg-slate-50 rounded-3xl p-6 text-left border border-slate-100">
-            <p className="text-xs text-slate-600 leading-relaxed font-medium">
-              The application is deployed, but the API Key is not detected. Please verify <strong>API_KEY</strong> exists in Vercel Environment Variables and perform a <strong>Redeploy</strong>.
-            </p>
-          </div>
-          <button onClick={() => window.location.reload()} className="w-full bg-slate-900 text-white font-black text-xs py-5 rounded-2xl shadow-xl hover:bg-slate-800 transition-all uppercase tracking-widest active:scale-95">
-            Check Connection
-          </button>
+          <h2 className="text-3xl font-black text-slate-900 mb-4 tracking-tight">Security Check</h2>
+          <p className="text-slate-500 mb-8 font-medium leading-relaxed">Application V7.0 is active, but requires an authorized API Key for the AI engine.</p>
+          <button onClick={() => window.location.reload()} className="w-full bg-slate-900 text-white font-black py-5 rounded-2xl hover:bg-emerald-600 transition-all uppercase tracking-widest text-xs">Verify Configuration</button>
         </div>
       </div>
     );
   }
 
   return (
-    <div className={`fixed bottom-0 right-0 z-[9999] transition-all duration-500 flex flex-col items-end p-4 ${isMinimized ? 'w-24 h-24' : 'w-full md:w-[440px] h-full max-h-[800px]'}`}>
-      <div className={`bg-white shadow-[0_32px_64px_-12px_rgba(0,0,0,0.2)] rounded-[2.5rem] border border-slate-200 flex flex-col overflow-hidden transition-all duration-500 h-full w-full ${isMinimized ? 'scale-0 opacity-0 translate-y-10' : 'scale-100 opacity-100'}`}>
-        <header className="px-6 py-6 flex items-center justify-between border-b border-slate-100 bg-white/80 backdrop-blur-md">
+    <div className={`fixed bottom-0 right-0 z-[9999] transition-all duration-700 flex flex-col items-end p-4 md:p-6 ${isMinimized ? 'w-24 h-24' : 'w-full md:w-[460px] h-full max-h-[850px]'}`}>
+      <div className={`bg-white shadow-[0_32px_80px_-16px_rgba(0,0,0,0.3)] rounded-[2.5rem] border border-slate-200/60 flex flex-col overflow-hidden transition-all duration-700 h-full w-full ${isMinimized ? 'scale-0 opacity-0 translate-y-20 rotate-12' : 'scale-100 opacity-100'}`}>
+        <header className="px-8 py-7 flex items-center justify-between border-b border-slate-100 bg-white/90 backdrop-blur-xl sticky top-0 z-10">
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-emerald-600 rounded-2xl flex items-center justify-center text-white font-black text-base shadow-lg shadow-emerald-500/20">ICT</div>
+            <div className="w-14 h-14 bg-gradient-to-br from-emerald-500 to-emerald-700 rounded-2xl flex items-center justify-center text-white font-black text-lg shadow-xl shadow-emerald-500/30">ICT</div>
             <div>
-              <h1 className="font-black text-sm text-slate-900 leading-tight uppercase tracking-tight">ICT Concierge</h1>
-              <div className="flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                <span className="text-[10px] text-slate-400 font-black uppercase tracking-widest">Active • {APP_VERSION}</span>
+              <h1 className="font-black text-sm text-slate-900 uppercase tracking-tight">ICT Concierge</h1>
+              <div className="flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest leading-none">High Performance • {APP_VERSION}</span>
               </div>
             </div>
           </div>
-          <button onClick={() => setIsMinimized(true)} className="p-2.5 text-slate-300 hover:text-slate-900 hover:bg-slate-50 rounded-xl transition-all">
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" /></svg>
+          <button onClick={() => setIsMinimized(true)} className="p-3 text-slate-400 hover:text-slate-900 hover:bg-slate-50 rounded-2xl transition-all">
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 9l-7 7-7-7" /></svg>
           </button>
         </header>
 
-        <main ref={scrollRef} className="flex-1 overflow-y-auto px-5 py-6 space-y-6 bg-slate-50/40">
+        <main ref={scrollRef} className="flex-1 overflow-y-auto px-6 py-8 space-y-8 bg-slate-50/50">
           {messages.map((msg) => <MessageItem key={msg.id} message={msg} />)}
-          {isLoading && (
-            <div className="flex justify-start px-2">
-              <div className="bg-white px-5 py-3.5 rounded-2xl rounded-tl-none border border-slate-100 shadow-sm flex items-center gap-2">
-                <div className="w-2 h-2 bg-emerald-500 rounded-full animate-bounce"></div>
-                <div className="w-2 h-2 bg-emerald-500 rounded-full animate-bounce [animation-delay:0.2s]"></div>
-                <div className="w-2 h-2 bg-emerald-500 rounded-full animate-bounce [animation-delay:0.4s]"></div>
-              </div>
+          
+          {messages.length === 1 && (
+            <div className="flex flex-wrap gap-2 pt-2 animate-in fade-in slide-in-from-bottom-4 duration-700">
+              {SUGGESTED_QUESTIONS.map((q, i) => (
+                <button 
+                  key={i} 
+                  onClick={() => handleSendMessage(q)}
+                  className="px-4 py-2 bg-white border border-slate-200 text-slate-600 rounded-full text-xs font-bold hover:border-emerald-500 hover:text-emerald-600 transition-all shadow-sm active:scale-95"
+                >
+                  {q}
+                </button>
+              ))}
             </div>
           )}
-          {error && <div className="mx-4 p-4 bg-red-50 border border-red-100 rounded-2xl text-red-600 text-[11px] font-bold text-center leading-tight shadow-sm">{error}</div>}
+
+          {isLoading && (
+            <div className="flex justify-start items-center gap-3">
+              <div className="w-8 h-8 rounded-full bg-emerald-50 flex items-center justify-center">
+                <div className="w-4 h-4 border-2 border-emerald-500/20 border-t-emerald-500 rounded-full animate-spin"></div>
+              </div>
+              <p className="text-[11px] font-black text-slate-300 uppercase tracking-widest">Generating Strategy...</p>
+            </div>
+          )}
+          {error && <div className="mx-4 p-5 bg-red-50 border border-red-100 rounded-2xl text-red-600 text-[11px] font-bold text-center shadow-sm">{error}</div>}
         </main>
         
-        <div className="px-5 pb-8 pt-4 bg-white border-t border-slate-50">
+        <div className="px-6 pb-10 pt-4 bg-white border-t border-slate-50 shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.05)]">
           <InputArea onSendMessage={handleSendMessage} isLoading={isLoading} />
         </div>
       </div>
 
-      <button onClick={() => setIsMinimized(!isMinimized)} className={`w-16 h-16 bg-emerald-600 rounded-[1.8rem] flex items-center justify-center text-white shadow-2xl hover:scale-110 active:scale-95 transition-all duration-300 ${!isMinimized ? 'mt-4 bg-slate-900 shadow-slate-900/10' : 'shadow-emerald-600/40'}`}>
+      <button onClick={() => setIsMinimized(!isMinimized)} className={`w-20 h-20 bg-emerald-600 rounded-[2rem] flex items-center justify-center text-white shadow-[0_24px_48px_-8px_rgba(16,185,129,0.5)] hover:scale-110 active:scale-90 transition-all duration-500 ${!isMinimized ? 'mt-6 bg-slate-900 shadow-slate-900/40' : 'animate-bounce-subtle'}`}>
         {isMinimized ? (
-          <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M8 10h.01M12 10h.01M16 10h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
+          <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M8 10h.01M12 10h.01M16 10h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
         ) : (
-          <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" /></svg>
+          <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" /></svg>
         )}
       </button>
+
+      <style>{`
+        @keyframes bounce-subtle {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-10px); }
+        }
+        .animate-bounce-subtle { animation: bounce-subtle 3s infinite ease-in-out; }
+      `}</style>
     </div>
   );
 };
