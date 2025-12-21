@@ -40,13 +40,13 @@
       }
       .fade-out { opacity: 0; pointer-events: none; }
     </style>
-
+  
 </head>
   <body>
     <!-- App Loading State -->
     <div id="loading-overlay">
       <div class="ict-dot"></div>
-      <p style="color: #64748b; font-size: 11px; font-weight: 800; margin-top: 24px; letter-spacing: 0.3em; text-transform: uppercase;">ICT Elite Engine V7.3</p>
+      <p style="color: #64748b; font-size: 11px; font-weight: 800; margin-top: 24px; letter-spacing: 0.3em; text-transform: uppercase;">ICT Elite Engine V8.1</p>
     </div>
     
     <div id="root"></div>
@@ -56,7 +56,7 @@
         const overlay = document.getElementById('loading-overlay');
         if (overlay) overlay.classList.add('fade-out');
       };
-      // Safety timeout for web app load
+      // Hide loader once components are ready
       setTimeout(window.hideICTLoader, 3000);
     </script>
     
