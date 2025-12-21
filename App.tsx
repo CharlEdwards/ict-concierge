@@ -5,7 +5,7 @@ import { SUGGESTED_QUESTIONS } from './constants';
 import MessageItem from './components/MessageItem';
 import InputArea from './components/InputArea';
 
-const APP_VERSION = "v7.3 Elite";
+const APP_VERSION = "v8.1 Deployment";
 const LEAD_WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbz3a0ARGJX90pzAGySe0mrqxdLlN3w7ioUWWkUw2lMwEQ9p7iRuvKkM0X0owKNKyZQm/exec"; 
 
 const checkApiKeyPresence = (): boolean => {
@@ -78,7 +78,7 @@ const App: React.FC = () => {
             ...response.leadCaptured, 
             capturedAt: new Date().toISOString(), 
             source: `ICT_CONCIERGE_${APP_VERSION}`,
-            environment: "Production_V7"
+            environment: "Production_V8"
           }),
           headers: { 'Content-Type': 'application/json' }
         }).catch((e) => console.error("Webhook submission error:", e));
@@ -102,7 +102,7 @@ const App: React.FC = () => {
             <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 00-2 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
           </div>
           <h2 className="text-3xl font-black text-slate-900 mb-4 tracking-tight">Security Check</h2>
-          <p className="text-slate-500 mb-8 font-medium leading-relaxed">Application V7.3 is active, but requires an authorized API Key for the AI engine.</p>
+          <p className="text-slate-500 mb-8 font-medium leading-relaxed">Application V8.1 is active, but requires an authorized API Key for the AI engine.</p>
           <button onClick={() => window.location.reload()} className="w-full bg-slate-900 text-white font-black py-5 rounded-2xl hover:bg-emerald-600 transition-all uppercase tracking-widest text-xs">Verify Configuration</button>
         </div>
       </div>
@@ -119,7 +119,7 @@ const App: React.FC = () => {
               <h1 className="font-black text-sm text-slate-900 uppercase tracking-tight">ICT Concierge</h1>
               <div className="flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest leading-none">Status: Elite • {APP_VERSION}</span>
+                <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest leading-none">Status: Online • {APP_VERSION}</span>
               </div>
             </div>
           </div>
@@ -150,7 +150,7 @@ const App: React.FC = () => {
               <div className="w-8 h-8 rounded-full bg-emerald-50 flex items-center justify-center">
                 <div className="w-4 h-4 border-2 border-emerald-500/20 border-t-emerald-500 rounded-full animate-spin"></div>
               </div>
-              <p className="text-[11px] font-black text-slate-300 uppercase tracking-widest">Consulting Knowledge Base...</p>
+              <p className="text-[11px] font-black text-slate-300 uppercase tracking-widest">Optimizing Intelligence...</p>
             </div>
           )}
           {error && <div className="mx-4 p-5 bg-red-50 border border-red-100 rounded-2xl text-red-600 text-[11px] font-bold text-center shadow-sm">{error}</div>}
@@ -165,7 +165,7 @@ const App: React.FC = () => {
         {isMinimized ? (
           <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M8 10h.01M12 10h.01M16 10h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
         ) : (
-          <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" /></svg>
+          <svg className=" Officer w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" /></svg>
         )}
       </button>
 
