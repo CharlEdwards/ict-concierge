@@ -1,7 +1,7 @@
 {
   "name": "ict-concierge",
   "private": true,
-  "version": "5.8.0",
+  "version": "6.7.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
