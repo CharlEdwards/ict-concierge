@@ -1,4 +1,3 @@
-
 import { GoogleGenAI, GenerateContentResponse, FunctionDeclaration, Type } from "@google/genai";
 import { ICT_SYSTEM_INSTRUCTION } from "../constants";
 
@@ -6,7 +5,7 @@ const submitLeadFolder: FunctionDeclaration = {
   name: 'submitLead',
   parameters: {
     type: Type.OBJECT,
-    description: 'Submit customer lead information for follow-up.',
+    description: 'Submit customer lead information (Name, Phone, Email) for business follow-up.',
     properties: {
       firstName: { type: Type.STRING, description: 'The customer first name' },
       phone: { type: Type.STRING, description: 'The customer phone number' },
@@ -17,6 +16,11 @@ const submitLeadFolder: FunctionDeclaration = {
 };
 
 export class GeminiService {
+  private getApiKey(): string {
+    const key = (process.env.API_KEY) || (import.meta as any).env?.VITE_API_KEY || '';
+    return key;
+  }
+
   async sendMessage(
     history: { role: 'user' | 'model'; parts: { text: string }[] }[],
     message: string
@@ -24,14 +28,15 @@ export class GeminiService {
     text: string; 
     sources: { uri: string; title: string }[];
     leadCaptured?: { firstName: string; phone: string; email: string };
-    functionCallId?: string;
   }> {
     try {
-      // Create fresh instance right before making an API call to ensure it always uses the most up-to-date API key
-      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || "" });
+      const apiKey = this.getApiKey();
+      if (!apiKey) throw new Error("API_KEY_MISSING");
+
+      const ai = new GoogleGenAI({ apiKey });
       
       const response: GenerateContentResponse = await ai.models.generateContent({
-        model: 'gemini-3-pro-preview', // Upgraded for more complex reasoning as requested
+        model: 'gemini-3-flash-preview',
         contents: [
           ...history,
           { role: 'user', parts: [{ text: message }] }
@@ -47,21 +52,19 @@ export class GeminiService {
 
       const text = response.text || "";
       let leadCaptured;
-      let functionCallId;
 
       if (response.candidates?.[0]?.content?.parts) {
         for (const part of response.candidates[0].content.parts) {
           if (part.functionCall && part.functionCall.name === 'submitLead') {
             leadCaptured = part.functionCall.args as any;
-            functionCallId = part.functionCall.id;
           }
         }
       }
       
       const sources: { uri: string; title: string }[] = [];
-      const groundingChunks = response.candidates?.[0]?.groundingMetadata?.groundingChunks;
-      if (groundingChunks) {
-        groundingChunks.forEach((chunk: any) => {
+      const groundingMetadata = response.candidates?.[0]?.groundingMetadata;
+      if (groundingMetadata?.groundingChunks) {
+        groundingMetadata.groundingChunks.forEach((chunk: any) => {
           if (chunk.web?.uri) {
             sources.push({ uri: chunk.web.uri, title: chunk.web.title || chunk.web.uri });
           }
@@ -69,13 +72,12 @@ export class GeminiService {
       }
 
       return { 
-        text: text || (leadCaptured ? "Thank you! I've recorded your information and someone from the ICT team will reach out shortly." : "I'm sorry, I couldn't process that."), 
+        text: text || (leadCaptured ? "I've received your information and sent it to our team. Thank you!" : "I'm sorry, I'm having trouble processing that right now."), 
         sources: this.deduplicateSources(sources),
-        leadCaptured,
-        functionCallId
+        leadCaptured
       };
     } catch (error) {
-      console.error("Gemini API Error:", error);
+      console.error("Gemini Service Error:", error);
       throw error;
     }
   }
@@ -83,9 +85,9 @@ export class GeminiService {
   private deduplicateSources(sources: { uri: string; title: string }[]): { uri: string; title: string }[] {
     const seen = new Set();
     return sources.filter(s => {
-      const duplicate = seen.has(s.uri);
+      if (seen.has(s.uri)) return false;
       seen.add(s.uri);
-      return !duplicate;
+      return true;
     });
   }
 }
