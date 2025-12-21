@@ -5,7 +5,7 @@ import { SUGGESTED_QUESTIONS } from './constants';
 import MessageItem from './components/MessageItem';
 import InputArea from './components/InputArea';
 
-const APP_VERSION = "v10.0 Elite";
+const APP_VERSION = "v12.0 Elite";
 const LEAD_WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbz3a0ARGJX90pzAGySe0mrqxdLlN3w7ioUWWkUw2lMwEQ9p7iRuvKkM0X0owKNKyZQm/exec"; 
 
 const checkApiKeyPresence = (): boolean => {
@@ -19,7 +19,7 @@ const App: React.FC = () => {
     {
       id: 'welcome',
       role: Role.BOT,
-      text: "Greetings. I am the ICT Elite Concierge. How may I assist with your IT certification or managed service needs today?",
+      text: "Greetings. I am the ICT Elite Concierge. How may I assist with your IT certification, web development, or managed service needs today?",
       timestamp: Date.now(),
     },
   ]);
@@ -78,7 +78,7 @@ const App: React.FC = () => {
             ...response.leadCaptured, 
             capturedAt: new Date().toISOString(), 
             source: `ICT_CONCIERGE_${APP_VERSION}`,
-            environment: "Production_V10"
+            environment: "Production_V12"
           }),
           headers: { 'Content-Type': 'application/json' }
         }).catch((e) => console.error("Webhook submission error:", e));
@@ -102,7 +102,7 @@ const App: React.FC = () => {
             <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 00-2 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
           </div>
           <h2 className="text-3xl font-black text-slate-900 mb-4 tracking-tight">System Initialization</h2>
-          <p className="text-slate-500 mb-8 font-medium leading-relaxed">Application V10.0 is online. Awaiting authorized API credentials to activate the neural engine.</p>
+          <p className="text-slate-500 mb-8 font-medium leading-relaxed">Application V12.0 is online. Awaiting authorized API credentials to activate the neural engine.</p>
           <button onClick={() => window.location.reload()} className="w-full bg-slate-900 text-white font-black py-5 rounded-2xl hover:bg-emerald-600 transition-all uppercase tracking-widest text-xs">Reload & Re-verify</button>
         </div>
       </div>
@@ -119,7 +119,7 @@ const App: React.FC = () => {
               <h1 className="font-black text-sm text-slate-900 uppercase tracking-tight">ICT Concierge</h1>
               <div className="flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest leading-none">Status: Ready • {APP_VERSION}</span>
+                <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest leading-none">Status: Active • {APP_VERSION}</span>
               </div>
             </div>
           </div>
@@ -150,7 +150,7 @@ const App: React.FC = () => {
               <div className="w-8 h-8 rounded-full bg-emerald-50 flex items-center justify-center">
                 <div className="w-4 h-4 border-2 border-emerald-500/20 border-t-emerald-500 rounded-full animate-spin"></div>
               </div>
-              <p className="text-[11px] font-black text-slate-300 uppercase tracking-widest">Deploying Excellence...</p>
+              <p className="text-[11px] font-black text-slate-300 uppercase tracking-widest">Generating High-Performance Solution...</p>
             </div>
           )}
           {error && <div className="mx-4 p-5 bg-red-50 border border-red-100 rounded-2xl text-red-600 text-[11px] font-bold text-center shadow-sm">{error}</div>}
