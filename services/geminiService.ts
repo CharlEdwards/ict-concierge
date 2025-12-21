@@ -1,5 +1,5 @@
 import { GoogleGenAI, GenerateContentResponse, FunctionDeclaration, Type } from "@google/genai";
-import { ICT_SYSTEM_INSTRUCTION } from "../ict-core";
+import { ICT_SYSTEM_INSTRUCTION } from "../ict-system-config";
 
 const submitLeadFolder: FunctionDeclaration = {
   name: 'submitLead',
@@ -17,8 +17,7 @@ const submitLeadFolder: FunctionDeclaration = {
 
 export class GeminiService {
   private getApiKey(): string {
-    const key = (process.env.API_KEY) || (import.meta as any).env?.VITE_API_KEY || '';
-    return key;
+    return (process.env.API_KEY) || (import.meta as any).env?.VITE_API_KEY || '';
   }
 
   async sendMessage(
@@ -72,7 +71,7 @@ export class GeminiService {
       }
 
       return { 
-        text: text || (leadCaptured ? "Intelligence Received. I've transmitted your details to the ICT team for priority follow-up." : "Neural link interrupted. Please restate your request."), 
+        text: text || (leadCaptured ? "Transmission Successful. Our team will contact you within 24 hours." : "Link interrupted. Please refresh or restate."), 
         sources: this.deduplicateSources(sources),
         leadCaptured
       };
