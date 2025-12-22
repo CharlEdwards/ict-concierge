@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Message, Role } from './types';
 import { geminiService } from './services/geminiService';
@@ -5,15 +6,10 @@ import { SUGGESTED_QUESTIONS, INDUSTRY_CONFIG } from './constants';
 import MessageItem from './components/MessageItem';
 import InputArea from './components/InputArea';
 
-const APP_VERSION = "v8.1 Stable";
+const APP_VERSION = "v8.2 Stable";
 const LEAD_WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbz3a0ARGJX90pzAGySe0mrqxdLlN3w7ioUWWkUw2lMwEQ9p7iRuvKkM0X0owKNKyZQm/exec"; 
 
-const checkApiKeyPresence = (): boolean => {
-  return !!(process.env.API_KEY || (import.meta as any).env?.VITE_API_KEY);
-};
-
 const App: React.FC = () => {
-  const [hasKey, setHasKey] = useState<boolean>(true);
   const [isMinimized, setIsMinimized] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -23,17 +19,18 @@ const App: React.FC = () => {
   const activeIndustry = INDUSTRY_CONFIG.current;
   const config = INDUSTRY_CONFIG.options[activeIndustry] || INDUSTRY_CONFIG.options.TECHNOLOGY;
 
+  // Fix: Removed checkApiKeyPresence logic to comply with the guideline that the app must not ask for an API key.
   useEffect(() => {
-    setHasKey(checkApiKeyPresence());
     if ((window as any).hideICTLoader) (window as any).hideICTLoader();
     
+    // Always initialize with a welcome message assuming the API key is handled externally.
     setMessages([{
       id: 'welcome',
       role: Role.BOT,
       text: `Greetings. I am the ${config.name}. How may I assist with your ${config.shortName} needs today?`,
       timestamp: Date.now(),
     }]);
-  }, []);
+  }, [config.name, config.shortName]);
 
   const scrollToBottom = () => {
     if (scrollRef.current) {
@@ -87,30 +84,12 @@ const App: React.FC = () => {
         }).catch((e) => console.error("Lead submission error:", e));
       }
     } catch (err: any) {
-      if (err.message === "API_KEY_MISSING") {
-        setHasKey(false);
-      } else {
-        setError("Network optimization in progress. Re-attempting connection...");
-      }
+      // Fix: Generic error handling instead of checking for API_KEY_MISSING.
+      setError("Network optimization in progress. Re-attempting connection...");
     } finally {
       setIsLoading(false);
     }
   }, [messages, isLoading, config.shortName, activeIndustry]);
-
-  if (!hasKey) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-[#020617] p-8">
-        <div className="max-w-md w-full bg-white rounded-[3rem] shadow-2xl p-12 text-center border border-white/20">
-          <div className="w-20 h-20 bg-emerald-50 text-emerald-600 rounded-3xl flex items-center justify-center mx-auto mb-8">
-            <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 00-2 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
-          </div>
-          <h2 className="text-2xl font-black text-slate-900 mb-4 tracking-tight">System Ready</h2>
-          <p className="text-slate-500 mb-8 font-medium leading-relaxed">The Concierge V8.1 is ready. Please ensure your <strong>API_KEY</strong> is set in Vercel environment variables.</p>
-          <button onClick={() => window.location.reload()} className="w-full bg-slate-900 text-white font-black py-5 rounded-2xl hover:bg-emerald-600 transition-all uppercase tracking-widest text-xs">Refresh Instance</button>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className={`fixed bottom-0 right-0 z-[9999] transition-all duration-700 ease-[cubic-bezier(0.23,1,0.32,1)] flex flex-col items-end p-0 md:p-6 ${isMinimized ? 'w-24 h-24' : 'w-full md:w-[480px] h-[100dvh] md:h-[85vh] max-h-[900px]'}`}>
@@ -124,7 +103,7 @@ const App: React.FC = () => {
               <h1 className="font-black text-base text-slate-900 uppercase tracking-tighter leading-none mb-1">{config.name}</h1>
               <div className="flex items-center gap-2">
                 <span className={`w-2 h-2 rounded-full bg-${config.accentColor} animate-pulse`}></span>
-                <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest leading-none">V8.1 Stable • Production</span>
+                <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest leading-none">V8.2 Production</span>
               </div>
             </div>
           </div>
