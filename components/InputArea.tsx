@@ -63,10 +63,10 @@ const InputArea: React.FC<InputAreaProps> = ({ onSendMessage, isLoading }) => {
         <button
           type="button"
           onClick={toggleListening}
-          className={`w-16 h-16 rounded-[1.5rem] transition-all flex-shrink-0 flex items-center justify-center border-2 ${
+          className={`w-16 h-16 rounded-[1.8rem] transition-all flex-shrink-0 flex items-center justify-center border-2 ${
             isListening 
               ? 'bg-red-500 border-red-500 text-white shadow-xl shadow-red-500/20' 
-              : `bg-slate-50 border-slate-50 text-slate-400 hover:border-${config.primaryColor} hover:text-${config.primaryColor}`
+              : `bg-slate-50 border-slate-50 text-slate-400 hover:border-blue-600 hover:text-blue-600`
           }`}
         >
           {isListening ? (
@@ -88,16 +88,16 @@ const InputArea: React.FC<InputAreaProps> = ({ onSendMessage, isLoading }) => {
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="Describe your request..."
-            className={`w-full bg-[#f8fafc] text-slate-900 rounded-[2rem] px-8 py-6 pr-20 focus:outline-none focus:ring-4 focus:ring-${config.primaryColor}/5 focus:bg-white border border-slate-100 transition-all resize-none min-h-[72px] font-bold text-[16px] placeholder:text-slate-300 shadow-sm`}
+            className={`w-full bg-[#f8fafc] text-slate-900 rounded-[2.2rem] px-8 py-6 pr-20 focus:outline-none focus:ring-4 focus:ring-blue-600/5 focus:bg-white border border-slate-100 transition-all resize-none min-h-[72px] font-bold text-[16px] placeholder:text-slate-300 shadow-sm`}
             disabled={isLoading}
           />
           <div className="absolute right-5 top-1/2 -translate-y-1/2">
             <button
               type="submit"
               disabled={!input.trim() || isLoading}
-              className={`w-12 h-12 rounded-[1rem] flex items-center justify-center transition-all ${
+              className={`w-12 h-12 rounded-[1.2rem] flex items-center justify-center transition-all ${
                 input.trim() && !isLoading
-                  ? `bg-${config.primaryColor} text-white shadow-xl shadow-${config.primaryColor}/30 scale-100`
+                  ? `bg-blue-600 text-white shadow-xl shadow-blue-600/30 scale-100`
                   : 'bg-slate-200 text-white scale-90 opacity-0 pointer-events-none'
               }`}
             >
@@ -106,7 +106,8 @@ const InputArea: React.FC<InputAreaProps> = ({ onSendMessage, isLoading }) => {
           </div>
         </div>
       </form>
-      <p className="text-center text-[10px] text-slate-300 mt-8 font-black uppercase tracking-[0.5em] pointer-events-none">Obsidian Protocol v20.0 Closer Architecture</p>
+      <div className="h-6"></div>
+      <p className="text-center text-[10px] text-slate-300 font-black uppercase tracking-[0.5em] pointer-events-none">Obsidian Protocol v25.0 Closer Architecture</p>
     </div>
   );
 };
