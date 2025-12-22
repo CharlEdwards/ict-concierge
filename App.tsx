@@ -5,7 +5,7 @@ import { SUGGESTED_QUESTIONS, INDUSTRY_CONFIG } from './constants';
 import MessageItem from './components/MessageItem';
 import InputArea from './components/InputArea';
 
-const APP_VERSION = "v9.0 Sapphire Elite";
+const APP_VERSION = "v10.0 Sapphire Prime";
 const LEAD_WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbz3a0ARGJX90pzAGySe0mrqxdLlN3w7ioUWWkUw2lMwEQ9p7iRuvKkM0X0owKNKyZQm/exec"; 
 
 const App: React.FC = () => {
@@ -21,11 +21,10 @@ const App: React.FC = () => {
   useEffect(() => {
     if ((window as any).hideICTLoader) (window as any).hideICTLoader();
     
-    // Greeting sequence
     setMessages([{
       id: 'welcome',
       role: Role.BOT,
-      text: `Welcome to ${config.name}. I am your elite consultant. How may I facilitate your technology requirements today?`,
+      text: `Greetings. I am the ${config.name}. I provide expert consultation on ICT's Managed Services and IT Training. How may I assist you?`,
       timestamp: Date.now(),
     }]);
   }, [config.name]);
@@ -41,7 +40,8 @@ const App: React.FC = () => {
 
   useEffect(() => {
     if (!isMinimized) {
-      setTimeout(scrollToBottom, 100);
+      const timer = setTimeout(scrollToBottom, 150);
+      return () => clearTimeout(timer);
     }
   }, [messages, isLoading, isMinimized]);
 
@@ -55,6 +55,7 @@ const App: React.FC = () => {
     setIsLoading(true);
 
     try {
+      // Correct role mapping for Gemini
       const history = updatedMessages.map((m) => ({
         role: (m.role === Role.BOT ? 'model' : 'user') as 'user' | 'model',
         parts: [{ text: m.text }],
@@ -84,9 +85,9 @@ const App: React.FC = () => {
         }).catch((e) => console.error("Lead submission error:", e));
       }
     } catch (err: any) {
-      console.error("System Error:", err);
-      setError("Strategic Connection Timeout. Please retry.");
-      setTimeout(() => setError(null), 3000);
+      console.error("Critical Connection Error:", err);
+      setError("Strategic Sync Interrupted. Re-establishing link...");
+      setTimeout(() => setError(null), 4000);
     } finally {
       setIsLoading(false);
     }
@@ -126,7 +127,7 @@ const App: React.FC = () => {
           
           {messages.length === 1 && (
             <div className="grid grid-cols-1 gap-3 animate-in fade-in slide-in-from-bottom-4 duration-1000">
-              <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-300 ml-2 mb-1">Elite Services Guide</p>
+              <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-300 ml-2 mb-1">Knowledge Navigation</p>
               {SUGGESTED_QUESTIONS.map((q, i) => (
                 <button 
                   key={i} 
@@ -145,7 +146,7 @@ const App: React.FC = () => {
               <div className="w-10 h-10 rounded-2xl bg-slate-50 flex items-center justify-center">
                 <div className={`w-5 h-5 border-2 border-blue-600/20 border-t-blue-600 rounded-full animate-spin`}></div>
               </div>
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest animate-pulse">Consulting Core Intelligence...</p>
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest animate-pulse">Syncing Intelligence...</p>
             </div>
           )}
           {error && <div className="mx-4 p-5 bg-rose-50 border border-rose-100 rounded-3xl text-rose-600 text-[11px] font-bold text-center shadow-sm uppercase tracking-widest">{error}</div>}
@@ -156,7 +157,7 @@ const App: React.FC = () => {
         </div>
       </div>
 
-      {/* Sapphire Elite Minimized State */}
+      {/* Sapphire Prime Minimized Tab */}
       <div 
         onClick={() => setIsMinimized(false)}
         className={`fixed bottom-8 right-8 cursor-pointer transition-all duration-700 ease-[cubic-bezier(0.19,1,0.22,1)] group
@@ -169,7 +170,7 @@ const App: React.FC = () => {
           </div>
           <div className="flex flex-col">
             <span className="text-white text-[11px] font-black uppercase tracking-[0.2em] leading-tight mb-0.5">{config.name}</span>
-            <span className="text-black text-[9px] font-black uppercase tracking-widest leading-none opacity-90">Open Assistance</span>
+            <span className="text-black text-[9px] font-black uppercase tracking-widest leading-none opacity-90 group-hover:opacity-100">Activate Consultant</span>
           </div>
           <div className="ml-4 w-10 h-10 bg-white/15 rounded-2xl flex items-center justify-center text-white transition-all">
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M8 10h.01M12 10h.01M16 10h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
