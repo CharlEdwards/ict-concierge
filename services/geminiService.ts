@@ -1,11 +1,11 @@
-import { GoogleGenAI, GenerateContentResponse, FunctionDeclaration, Type } from "@google/genai";
+import { GoogleGenAI, GenerateContentResponse, FunctionDeclaration, Type, Chat } from "@google/genai";
 import { getSystemInstruction } from "../constants";
 
 const submitLeadFolder: FunctionDeclaration = {
   name: 'submitLead',
   parameters: {
     type: Type.OBJECT,
-    description: 'Submit customer lead information (Name, Phone, Email) for business follow-up.',
+    description: 'Submit customer lead information for business follow-up.',
     properties: {
       firstName: { type: Type.STRING, description: 'The customer first name' },
       phone: { type: Type.STRING, description: 'The customer phone number' },
@@ -17,11 +17,11 @@ const submitLeadFolder: FunctionDeclaration = {
 
 export class GeminiService {
   /**
-   * Processes the message using high-precision generateContent to ensure specific answers.
+   * Sends a message using a managed Chat session to ensure proper role alternation and context.
    */
   async sendMessage(
     history: { role: 'user' | 'model'; parts: { text: string }[] }[],
-    _message: string
+    message: string
   ): Promise<{ 
     text: string; 
     sources: { uri: string; title: string }[];
@@ -30,32 +30,31 @@ export class GeminiService {
     try {
       const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
       
-      // Use Flash for high-speed, direct responses that follow instructions strictly
-      const response: GenerateContentResponse = await ai.models.generateContent({
+      // Initialize Chat with history (excluding the very latest user message which is sent via sendMessage)
+      const chat: Chat = ai.chats.create({
         model: 'gemini-3-flash-preview',
-        contents: history,
+        history: history.slice(0, -1),
         config: {
           systemInstruction: getSystemInstruction(),
           tools: [{ functionDeclarations: [submitLeadFolder] }],
-          temperature: 0.7, // Balanced for precision and natural flow
-          topP: 0.9,
-          maxOutputTokens: 500,
+          temperature: 0.2, // Low temperature for maximum factual accuracy
+          topP: 0.8,
         },
       });
 
-      const text = response.text || "";
+      // Send the current message
+      const result: GenerateContentResponse = await chat.sendMessage({ message });
+      const text = result.text || "";
+      
       let leadCaptured;
-
-      // Extract tool calls
-      if (response.functionCalls && response.functionCalls.length > 0) {
-        const leadCall = response.functionCalls.find(fc => fc.name === 'submitLead');
-        if (leadCall) {
-          leadCaptured = leadCall.args as any;
-        }
+      const fcs = result.functionCalls;
+      if (fcs && fcs.length > 0) {
+        const leadCall = fcs.find(fc => fc.name === 'submitLead');
+        if (leadCall) leadCaptured = leadCall.args as any;
       }
       
       const sources: { uri: string; title: string }[] = [];
-      const gm = response.candidates?.[0]?.groundingMetadata;
+      const gm = result.candidates?.[0]?.groundingMetadata;
       if (gm?.groundingChunks) {
         gm.groundingChunks.forEach((chunk: any) => {
           if (chunk.web?.uri) {
@@ -64,11 +63,12 @@ export class GeminiService {
         });
       }
 
-      // Safeguard against empty or repeating responses
+      // Final validation to ensure no echoing occurred
       const finalResponse = text.trim();
-      if (!finalResponse || finalResponse.toLowerCase() === _message.toLowerCase()) {
+      if (!finalResponse || finalResponse.toLowerCase().includes(message.toLowerCase().substring(0, 10))) {
+        // Fallback for safety if the model glitches
         return {
-          text: "ICT is a premier technology provider specializing in Managed IT Services, Cybersecurity, and Professional IT Training (CompTIA). How can we help you scale today?",
+          text: "Inner City Technology specializes in Managed IT Services, Cybersecurity, and IT Training (CompTIA A+/Security+). How can we assist your business today?",
           sources: []
         };
       }
@@ -79,7 +79,7 @@ export class GeminiService {
         leadCaptured
       };
     } catch (error) {
-      console.error("Gemini Core Error:", error);
+      console.error("Gemini Session Error:", error);
       throw error;
     }
   }
