@@ -5,10 +5,10 @@ import { SUGGESTED_QUESTIONS, INDUSTRY_CONFIG } from './constants';
 import MessageItem from './components/MessageItem';
 import InputArea from './components/InputArea';
 
-const APP_VERSION = "v14.0 Obsidian Prime";
+const APP_VERSION = "v15.0 Obsidian Core";
 const LEAD_WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbz3a0ARGJX90pzAGySe0mrqxdLlN3w7ioUWWkUw2lMwEQ9p7iRuvKkM0X0owKNKyZQm/exec"; 
 
-// Audio Buffer Manager
+// Voice Synthesis Engine
 const decodeBase64 = (base64: string) => {
   const binaryString = atob(base64);
   const bytes = new Uint8Array(binaryString.length);
@@ -18,7 +18,7 @@ const decodeBase64 = (base64: string) => {
   return bytes;
 };
 
-const playPCM = async (base64Data: string) => {
+const playVoice = async (base64Data: string) => {
   try {
     const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 24000 });
     const bytes = decodeBase64(base64Data);
@@ -33,7 +33,7 @@ const playPCM = async (base64Data: string) => {
     source.connect(audioCtx.destination);
     source.start();
   } catch (e) {
-    console.warn("Audio playback context was interrupted.");
+    console.warn("Vocal sequence interrupted by browser policy.");
   }
 };
 
@@ -47,7 +47,7 @@ const App: React.FC = () => {
 
   const config = INDUSTRY_CONFIG.options[INDUSTRY_CONFIG.current];
 
-  // Initialize Concierge
+  // Initialize UI
   useEffect(() => {
     if ((window as any).hideICTLoader) (window as any).hideICTLoader();
     
@@ -55,7 +55,7 @@ const App: React.FC = () => {
       setMessages([{
         id: 'welcome',
         role: Role.BOT,
-        text: `Greetings. I am the ${config.name}. I am here to provide expert consultation on ICT's Managed Services and IT Certification programs. How may I assist you today?`,
+        text: `Greetings. I am the ${config.name}. I am here to provide expert consultation on Managed IT Services and Professional IT Training for ICT. How may I assist your business today?`,
         timestamp: Date.now(),
       }]);
     }
@@ -87,11 +87,14 @@ const App: React.FC = () => {
     setIsLoading(true);
 
     try {
-      // Create strict history for API (Must alternate User/Model)
-      const apiHistory = currentSequence.map((m) => ({
-        role: (m.role === Role.BOT ? 'model' : 'user') as 'user' | 'model',
-        parts: [{ text: m.text }],
-      }));
+      // API RECTIFICATION: Filter history to ensure it starts with a USER message.
+      // This prevents the "Strategic Sync Interrupted" 400 error caused by role-mismatch.
+      const apiHistory = currentSequence
+        .filter(m => m.id !== 'welcome') // Remove local welcome message from API history
+        .map((m) => ({
+          role: (m.role === Role.BOT ? 'model' : 'user') as 'user' | 'model',
+          parts: [{ text: m.text }],
+        }));
       
       const response = await geminiService.sendMessage(apiHistory, text);
       
@@ -105,12 +108,12 @@ const App: React.FC = () => {
       
       setMessages((prev) => [...prev, botMsg]);
 
-      // Professional Voice Playback
+      // Soft Female Voice Playback
       if (response.audioData && !isMuted) {
-        playPCM(response.audioData);
+        playVoice(response.audioData);
       }
       
-      // Lead Handling
+      // Lead Handling (Webhooks)
       if (response.leadCaptured && LEAD_WEBHOOK_URL) {
         fetch(LEAD_WEBHOOK_URL, {
           method: 'POST',
@@ -125,21 +128,25 @@ const App: React.FC = () => {
         }).catch((e) => console.error("Lead submission error:", e));
       }
     } catch (err: any) {
-      console.error("Strategic Handshake Error:", err.message);
-      setError("Strategic Sync Interrupted. Re-aligning with ICT Core...");
-      setTimeout(() => setError(null), 6000);
+      console.error("Critical Handshake Sync Error:", err.message);
+      if (err.message?.includes("API_KEY_MISSING")) {
+        setError("SECURITY ACCESS DENIED. PLEASE VERIFY API KEY IN VERCEL ENVIRONMENT.");
+      } else {
+        setError("STRATEGIC SYNC INTERRUPTED. RE-ESTABLISHING SECURE VOCAL LINK...");
+      }
+      setTimeout(() => setError(null), 8000);
     } finally {
       setIsLoading(false);
     }
   }, [messages, isLoading, config.name, isMuted]);
 
   return (
-    <div className={`fixed bottom-0 right-0 z-[9999] transition-all duration-700 ease-[cubic-bezier(0.19,1,0.22,1)] flex flex-col items-end p-0 md:p-6 ${isMinimized ? 'w-auto' : 'w-full md:w-[480px] h-[100dvh] md:h-[85vh] max-h-[900px]'}`}>
+    <div className={`fixed bottom-0 right-0 z-[9999] transition-all duration-700 ease-[cubic-bezier(0.19,1,0.22,1)] flex flex-col items-end p-0 md:p-6 ${isMinimized ? 'w-auto' : 'w-full md:w-[480px] h-[100dvh] md:h-[85vh] max-h-[950px]'}`}>
       
       {/* Concierge Interface */}
-      <div className={`bg-white shadow-[0_70px_160px_-40px_rgba(0,0,0,0.7)] md:rounded-[3.8rem] border border-slate-200/50 flex flex-col overflow-hidden transition-all duration-1000 h-full w-full ${isMinimized ? 'scale-75 opacity-0 translate-y-40 pointer-events-none' : 'scale-100 opacity-100 translate-y-0'}`}>
+      <div className={`bg-white shadow-[0_80px_180px_-40px_rgba(0,0,0,0.7)] md:rounded-[4rem] border border-slate-200/50 flex flex-col overflow-hidden transition-all duration-1000 h-full w-full ${isMinimized ? 'scale-75 opacity-0 translate-y-40 pointer-events-none' : 'scale-100 opacity-100 translate-y-0'}`}>
         
-        {/* Prime Header */}
+        {/* Elite Header */}
         <header className="px-12 py-12 flex items-center justify-between border-b border-slate-50 bg-white/40 backdrop-blur-3xl sticky top-0 z-20">
           <div className="flex items-center gap-7">
             <div className="w-16 h-16 bg-blue-600 rounded-[1.8rem] flex items-center justify-center text-white font-black text-3xl shadow-2xl shadow-blue-600/40 relative">
@@ -150,7 +157,7 @@ const App: React.FC = () => {
               <h1 className="font-black text-2xl text-slate-900 uppercase tracking-tighter leading-none mb-1.5">{config.name}</h1>
               <div className="flex items-center gap-2.5">
                 <span className="w-2.5 h-2.5 rounded-full bg-blue-600 animate-pulse shadow-lg shadow-blue-600/50"></span>
-                <span className="text-[11px] text-slate-400 font-black uppercase tracking-[0.3em] leading-none">Voice Synthesizer Active</span>
+                <span className="text-[11px] text-slate-400 font-black uppercase tracking-[0.3em] leading-none">Voice Synthesizer Online</span>
               </div>
             </div>
           </div>
@@ -171,13 +178,13 @@ const App: React.FC = () => {
           </div>
         </header>
 
-        {/* Intelligence Feed */}
+        {/* intelligence Stream */}
         <main ref={scrollRef} className="flex-1 overflow-y-auto px-10 py-14 space-y-12 bg-[#fdfdfe]">
           {messages.map((msg) => <MessageItem key={msg.id} message={msg} />)}
           
           {messages.length === 1 && (
             <div className="grid grid-cols-1 gap-5 animate-in fade-in slide-in-from-bottom-12 duration-1000">
-              <p className="text-[11px] font-black uppercase tracking-[0.5em] text-slate-300 ml-4 mb-2">Secure Knowledge Shortcuts</p>
+              <p className="text-[11px] font-black uppercase tracking-[0.5em] text-slate-300 ml-4 mb-2">Secure Expert Routing</p>
               {SUGGESTED_QUESTIONS.map((q, i) => (
                 <button 
                   key={i} 
@@ -196,14 +203,14 @@ const App: React.FC = () => {
               <div className="w-14 h-14 rounded-[1.5rem] bg-slate-50 flex items-center justify-center shadow-inner">
                 <div className="w-7 h-7 border-[4px] border-blue-600/10 border-t-blue-600 rounded-full animate-spin"></div>
               </div>
-              <p className="text-[12px] font-black text-slate-400 uppercase tracking-[0.4em] animate-pulse">Analyzing Knowledge Matrix...</p>
+              <p className="text-[12px] font-black text-slate-400 uppercase tracking-[0.4em] animate-pulse">Syncing Knowledge Core...</p>
             </div>
           )}
           
           {error && (
             <div className="mx-6 p-8 bg-rose-50 border border-rose-100 rounded-[3rem] text-rose-600 text-[13px] font-black text-center shadow-xl uppercase tracking-[0.15em] leading-relaxed">
               {error}
-              <span className="text-[11px] opacity-60 block mt-3 font-bold">Initiating auto-recovery sequence...</span>
+              <span className="text-[11px] opacity-60 block mt-3 font-bold">Initiating Obsidian Core auto-recovery...</span>
             </div>
           )}
         </main>
@@ -216,12 +223,12 @@ const App: React.FC = () => {
       {/* Launcher */}
       <div 
         onClick={() => setIsMinimized(false)}
-        className={`fixed bottom-10 right-10 cursor-pointer transition-all duration-700 ease-[cubic-bezier(0.19,1,0.22,1)] group ${isMinimized ? 'opacity-100 scale-100 rotate-0' : 'opacity-0 scale-50 rotate-90 pointer-events-none'}`}
+        className={`fixed bottom-10 right-10 cursor-pointer transition-all duration-700 ease-[cubic-bezier(0.19,1,0.22,1)] group ${isMinimized ? 'opacity-100 scale-100' : 'opacity-0 scale-50 pointer-events-none'}`}
       >
         <div className="flex items-center gap-7 bg-blue-600 pl-12 pr-8 py-7 rounded-[4rem] shadow-[0_50px_120px_-20px_rgba(37,99,235,0.85)] border border-white/20 hover:scale-105 active:scale-95 transition-all">
           <div className="flex flex-col">
             <span className="text-white text-[14px] font-black uppercase tracking-[0.4em] leading-tight mb-1.5">{config.name}</span>
-            <span className="text-black text-[11px] font-black uppercase tracking-widest leading-none opacity-90">Secure Connection</span>
+            <span className="text-black text-[11px] font-black uppercase tracking-widest leading-none opacity-90">Secure Intelligence</span>
           </div>
           <div className="w-16 h-16 bg-white/20 rounded-[2rem] flex items-center justify-center text-white transition-all shadow-inner relative overflow-hidden group-hover:bg-white/30">
             <div className="absolute inset-0 bg-white/10 animate-pulse"></div>
