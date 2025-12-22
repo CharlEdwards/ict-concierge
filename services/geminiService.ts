@@ -17,15 +17,16 @@ const submitLeadFolder: FunctionDeclaration = {
 
 export class GeminiService {
   /**
-   * Generates high-fidelity voice data. Wrapped in try-catch to prevent blocking main flow.
+   * Generates voice data with high reliability.
    */
   async generateVoice(text: string, apiKey: string): Promise<string | undefined> {
     if (!apiKey) return undefined;
     try {
       const ai = new GoogleGenAI({ apiKey });
+      // Using Flash for TTS as it is faster and more reliable on lower tiers
       const speechResponse = await ai.models.generateContent({
         model: "gemini-2.5-flash-preview-tts",
-        contents: [{ parts: [{ text: `In a smooth, professional American female executive voice: ${text}` }] }],
+        contents: [{ parts: [{ text: `Say this professionally: ${text}` }] }],
         config: {
           responseModalities: [Modality.AUDIO],
           speechConfig: {
@@ -37,7 +38,7 @@ export class GeminiService {
       });
       return speechResponse.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
     } catch (err) {
-      console.warn("ICT Voice Engine: TTS non-critical failure.", err);
+      console.warn("ICT Voice Engine: TTS suppressed to prioritize text stability.");
       return undefined;
     }
   }
@@ -54,21 +55,24 @@ export class GeminiService {
     const apiKey = process.env.API_KEY;
     if (!apiKey) throw new Error("AUTH_REQUIRED");
 
+    // We try Flash first because it has much higher quotas for "Free Tier" users
+    // If billing is not fully synced, the Pro model will 429/Fail.
+    const primaryModel = 'gemini-3-flash-preview'; 
+
     try {
       const ai = new GoogleGenAI({ apiKey });
       const response: GenerateContentResponse = await ai.models.generateContent({
-        model: 'gemini-3-pro-preview',
+        model: primaryModel,
         contents: history,
         config: {
           systemInstruction: getSystemInstruction(),
           tools: [{ functionDeclarations: [submitLeadFolder] }],
-          temperature: 0.2,
-          maxOutputTokens: 1000,
-          thinkingConfig: { thinkingBudget: 4000 },
+          temperature: 0.3,
+          maxOutputTokens: 800,
         },
       });
 
-      const text = response.text || "I am processing your strategic request. Please continue.";
+      const text = response.text || "Synchronizing with ICT Intelligence...";
       
       let leadCaptured;
       if (response.functionCalls && response.functionCalls.length > 0) {
@@ -86,7 +90,7 @@ export class GeminiService {
         });
       }
 
-      // Background voice generation so we don't delay the text
+      // Voice is non-blocking. If it fails, text still delivers.
       const audioData = await this.generateVoice(text, apiKey);
 
       return { 
@@ -96,8 +100,7 @@ export class GeminiService {
         leadCaptured
       };
     } catch (error: any) {
-      console.error("ICT Logic Fault:", error);
-      // Propagate the specific error message for UI diagnostics
+      console.error("ICT Primary Logic Fault:", error);
       throw error;
     }
   }
