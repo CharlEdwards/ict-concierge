@@ -1,4 +1,4 @@
-import { GoogleGenAI, GenerateContentResponse, FunctionDeclaration, Type } from "@google/genai";
+import { GoogleGenAI, GenerateContentResponse, FunctionDeclaration, Type, Chat } from "@google/genai";
 import { getSystemInstruction } from "../constants";
 
 const submitLeadFolder: FunctionDeclaration = {
@@ -17,24 +17,23 @@ const submitLeadFolder: FunctionDeclaration = {
 
 export class GeminiService {
   /**
-   * Sends a message to the Gemini model and handles the response.
+   * Sends a message using a Chat session to maintain proper context and prevent echoing.
    */
   async sendMessage(
     history: { role: 'user' | 'model'; parts: { text: string }[] }[],
-    _message: string // message is already included in the history array from App.tsx
+    message: string
   ): Promise<{ 
     text: string; 
     sources: { uri: string; title: string }[];
     leadCaptured?: { firstName: string; phone: string; email: string };
   }> {
     try {
-      // Initialize with the standard environment key
       const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
       
-      // Use history directly as contents since it already includes the latest user message
-      const response: GenerateContentResponse = await ai.models.generateContent({
-        model: 'gemini-3-flash-preview',
-        contents: history,
+      // Use the Pro model for higher quality reasoning and better instruction following
+      const chat: Chat = ai.chats.create({
+        model: 'gemini-3-pro-preview',
+        history: history.slice(0, -1), // Everything except the latest user message
         config: {
           systemInstruction: getSystemInstruction(),
           tools: [
@@ -43,12 +42,13 @@ export class GeminiService {
         },
       });
 
-      // Use the .text property as defined in the latest SDK
-      const text = response.text || "";
+      // Send the actual message separately to ensure the model responds to it
+      const result: GenerateContentResponse = await chat.sendMessage({ message });
+
+      const text = result.text || "";
       let leadCaptured;
 
-      // Extract function calls from the dedicated response property
-      const fcs = response.functionCalls;
+      const fcs = result.functionCalls;
       if (fcs && fcs.length > 0) {
         const leadCall = fcs.find(fc => fc.name === 'submitLead');
         if (leadCall) {
@@ -57,8 +57,7 @@ export class GeminiService {
       }
       
       const sources: { uri: string; title: string }[] = [];
-      // Grounding URLs are extracted if present in groundingMetadata
-      const gm = response.candidates?.[0]?.groundingMetadata;
+      const gm = result.candidates?.[0]?.groundingMetadata;
       if (gm?.groundingChunks) {
         gm.groundingChunks.forEach((chunk: any) => {
           if (chunk.web?.uri) {
@@ -68,12 +67,12 @@ export class GeminiService {
       }
 
       return { 
-        text: text || (leadCaptured ? "System alert: Lead information successfully captured. Our executive team has been notified." : "Processing..."), 
+        text: text || (leadCaptured ? "Strategic Alert: Your lead profile has been transmitted to our executive leadership team. We will connect shortly." : "Synthesis complete. Please proceed."), 
         sources: this.deduplicateSources(sources),
         leadCaptured
       };
     } catch (error) {
-      console.error("Gemini Service Error Detail:", error);
+      console.error("Gemini Core Error:", error);
       throw error;
     }
   }
