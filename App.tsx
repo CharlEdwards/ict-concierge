@@ -5,7 +5,7 @@ import { SUGGESTED_QUESTIONS, INDUSTRY_CONFIG } from './constants';
 import MessageItem from './components/MessageItem';
 import InputArea from './components/InputArea';
 
-const APP_VERSION = "v8.6 Sapphire";
+const APP_VERSION = "v8.7 Sapphire Prime";
 const LEAD_WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbz3a0ARGJX90pzAGySe0mrqxdLlN3w7ioUWWkUw2lMwEQ9p7iRuvKkM0X0owKNKyZQm/exec"; 
 
 const App: React.FC = () => {
@@ -103,7 +103,7 @@ const App: React.FC = () => {
             <div>
               <h1 className="font-black text-lg text-slate-900 uppercase tracking-tighter leading-none mb-1">{config.name}</h1>
               <div className="flex items-center gap-2">
-                <span className={`w-2 h-2 rounded-full bg-${config.primaryColor} animate-pulse`}></span>
+                <span className={`w-2 h-2 rounded-full bg-blue-600 animate-pulse`}></span>
                 <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest leading-none">{config.tagline}</span>
               </div>
             </div>
@@ -139,7 +139,7 @@ const App: React.FC = () => {
           {isLoading && (
             <div className="flex justify-start items-center gap-4 animate-pulse">
               <div className="w-10 h-10 rounded-2xl bg-slate-50 flex items-center justify-center">
-                <div className={`w-5 h-5 border-2 border-${config.primaryColor}/20 border-t-${config.primaryColor} rounded-full animate-spin`}></div>
+                <div className={`w-5 h-5 border-2 border-blue-600/20 border-t-blue-600 rounded-full animate-spin`}></div>
               </div>
               <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Generating Insight...</p>
             </div>
@@ -152,23 +152,23 @@ const App: React.FC = () => {
         </div>
       </div>
 
-      {/* World Class Minimized Tab */}
+      {/* World Class Minimized Tab - Updated for high-visibility Sapphire Blue */}
       <div 
         onClick={() => setIsMinimized(false)}
         className={`fixed bottom-8 right-8 cursor-pointer transition-all duration-700 ease-[cubic-bezier(0.19,1,0.22,1)] group
           ${isMinimized ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-20 pointer-events-none'}`}
       >
-        <div className="flex items-center gap-4 bg-slate-900 px-8 py-5 rounded-[2.5rem] shadow-[0_20px_60px_-15px_rgba(0,0,0,0.5)] border border-white/10 hover:scale-105 active:scale-95 transition-all">
+        <div className="flex items-center gap-4 bg-blue-600 px-8 py-5 rounded-[2.5rem] shadow-[0_25px_60px_-15px_rgba(37,99,235,0.6)] border border-white/20 hover:scale-105 active:scale-95 transition-all">
           <div className="relative">
-             <div className={`w-4 h-4 rounded-full bg-${config.accentColor} animate-ping absolute opacity-75`}></div>
-             <div className={`w-4 h-4 rounded-full bg-${config.accentColor} relative shadow-lg shadow-blue-500/50`}></div>
+             <div className="w-4 h-4 rounded-full bg-white animate-ping absolute opacity-75"></div>
+             <div className="w-4 h-4 rounded-full bg-white relative shadow-lg shadow-white/30"></div>
           </div>
           <div className="flex flex-col">
             <span className="text-white text-[11px] font-black uppercase tracking-[0.2em] leading-tight mb-0.5">{config.name}</span>
-            <span className="text-slate-400 text-[9px] font-bold uppercase tracking-widest leading-none group-hover:text-blue-400 transition-colors">Active Assistance</span>
+            <span className="text-black text-[9px] font-black uppercase tracking-widest leading-none opacity-80 group-hover:opacity-100 transition-opacity">Active Assistance</span>
           </div>
-          <div className="ml-4 w-10 h-10 bg-white/5 rounded-2xl flex items-center justify-center text-white group-hover:bg-white/10 transition-all">
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M8 10h.01M12 10h.01M16 10h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
+          <div className="ml-4 w-10 h-10 bg-white/10 rounded-2xl flex items-center justify-center text-white group-hover:bg-white/20 transition-all">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M8 10h.01M12 10h.01M16 10h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
           </div>
         </div>
       </div>
