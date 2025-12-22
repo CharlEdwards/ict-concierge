@@ -87,7 +87,7 @@ const InputArea: React.FC<InputAreaProps> = ({ onSendMessage, isLoading }) => {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Describe your technology request..."
+            placeholder="Describe your request..."
             className={`w-full bg-[#f8fafc] text-slate-900 rounded-[2rem] px-8 py-6 pr-20 focus:outline-none focus:ring-4 focus:ring-${config.primaryColor}/5 focus:bg-white border border-slate-100 transition-all resize-none min-h-[72px] font-bold text-[16px] placeholder:text-slate-300`}
             disabled={isLoading}
           />
@@ -106,7 +106,7 @@ const InputArea: React.FC<InputAreaProps> = ({ onSendMessage, isLoading }) => {
           </div>
         </div>
       </form>
-      <p className="text-center text-[10px] text-slate-300 mt-8 font-black uppercase tracking-[0.5em] pointer-events-none">Obsidian Core v15.0 Enterprise Architecture Active</p>
+      <p className="text-center text-[10px] text-slate-300 mt-8 font-black uppercase tracking-[0.5em] pointer-events-none">Obsidian Protocol v18.0 Active Architecture</p>
     </div>
   );
 };
