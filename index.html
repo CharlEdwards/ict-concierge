@@ -2,18 +2,21 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ICT Concierge | High-Performance AI</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" />
+    <title>AI Concierge | Global Edition</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
+      :root {
+        --safe-area-inset-bottom: env(safe-area-inset-bottom);
+      }
       body {
-        font-family: 'Plus Jakarta Sans', sans-serif;
+        font-family: 'Inter', sans-serif;
         margin: 0;
         padding: 0;
-        background-color: #020617;
-        overflow-x: hidden;
+        background-color: transparent;
+        overflow: hidden;
       }
       #loading-overlay {
         position: fixed;
@@ -23,12 +26,12 @@
         align-items: center;
         justify-content: center;
         z-index: 9999;
-        background: radial-gradient(circle at center, #0f172a 0%, #020617 100%);
+        background: #020617;
         transition: opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1);
       }
       .ict-dot {
-        width: 16px;
-        height: 16px;
+        width: 12px;
+        height: 12px;
         background: #10b981;
         border-radius: 50%;
         animation: pulse 2s infinite ease-in-out;
@@ -39,6 +42,9 @@
         100% { transform: scale(0.9); opacity: 0.5; box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); }
       }
       .fade-out { opacity: 0; pointer-events: none; }
+      
+      /* Smooth transitions for all elements */
+      * { transition: background-color 0.3s ease, border-color 0.3s ease; }
     </style>
   
 </head>
@@ -46,7 +52,7 @@
     <!-- App Loading State -->
     <div id="loading-overlay">
       <div class="ict-dot"></div>
-      <p style="color: #64748b; font-size: 11px; font-weight: 800; margin-top: 24px; letter-spacing: 0.3em; text-transform: uppercase;">ICT Elite Engine V19.0</p>
+      <p style="color: #64748b; font-size: 10px; font-weight: 900; margin-top: 24px; letter-spacing: 0.4em; text-transform: uppercase;">Booting Elite Core V8.0</p>
     </div>
     
     <div id="root"></div>
@@ -56,10 +62,8 @@
         const overlay = document.getElementById('loading-overlay');
         if (overlay) overlay.classList.add('fade-out');
       };
-      // Auto-hide if React takes too long to mount
-      setTimeout(() => {
-        if(window.hideICTLoader) window.hideICTLoader();
-      }, 4000);
+      // Auto-hide safely
+      setTimeout(window.hideICTLoader, 3500);
     </script>
     
     <script type="module" src="/index.tsx"></script>
