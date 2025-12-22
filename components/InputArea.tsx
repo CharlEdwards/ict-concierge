@@ -66,7 +66,7 @@ const InputArea: React.FC<InputAreaProps> = ({ onSendMessage, isLoading }) => {
           className={`w-14 h-14 rounded-2xl transition-all flex-shrink-0 flex items-center justify-center border-2 ${
             isListening 
               ? 'bg-red-500 border-red-500 text-white shadow-xl shadow-red-500/20' 
-              : 'bg-slate-50 border-slate-50 text-slate-400 hover:border-emerald-500 hover:text-emerald-600'
+              : `bg-slate-50 border-slate-50 text-slate-400 hover:border-${config.primaryColor} hover:text-${config.primaryColor}`
           }`}
         >
           {isListening ? (
@@ -88,7 +88,7 @@ const InputArea: React.FC<InputAreaProps> = ({ onSendMessage, isLoading }) => {
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="Describe your request..."
-            className="w-full bg-[#f8fafc] text-slate-900 rounded-[1.5rem] px-6 py-5 pr-16 focus:outline-none focus:ring-4 focus:ring-emerald-500/5 focus:bg-white border border-slate-100 transition-all resize-none min-h-[64px] font-semibold text-[15px] placeholder:text-slate-300"
+            className={`w-full bg-[#f8fafc] text-slate-900 rounded-[1.5rem] px-6 py-5 pr-16 focus:outline-none focus:ring-4 focus:ring-${config.primaryColor}/5 focus:bg-white border border-slate-100 transition-all resize-none min-h-[64px] font-semibold text-[15px] placeholder:text-slate-300`}
             disabled={isLoading}
           />
           <div className="absolute right-4 top-1/2 -translate-y-1/2">
@@ -97,7 +97,7 @@ const InputArea: React.FC<InputAreaProps> = ({ onSendMessage, isLoading }) => {
               disabled={!input.trim() || isLoading}
               className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${
                 input.trim() && !isLoading
-                  ? `bg-${config.primaryColor} text-white shadow-lg shadow-emerald-600/20 scale-100`
+                  ? `bg-${config.primaryColor} text-white shadow-lg shadow-${config.primaryColor}/20 scale-100`
                   : 'bg-slate-200 text-white scale-90 opacity-0 pointer-events-none'
               }`}
             >
@@ -106,7 +106,7 @@ const InputArea: React.FC<InputAreaProps> = ({ onSendMessage, isLoading }) => {
           </div>
         </div>
       </form>
-      <p className="text-center text-[9px] text-slate-300 mt-6 font-black uppercase tracking-[0.4em] pointer-events-none">Concierge v8.0 Enterprise Encryption Active</p>
+      <p className="text-center text-[9px] text-slate-300 mt-6 font-black uppercase tracking-[0.4em] pointer-events-none">Concierge v8.6 Enterprise Encryption Active</p>
     </div>
   );
 };
