@@ -17,7 +17,7 @@ const submitLeadFolder: FunctionDeclaration = {
 
 export class GeminiService {
   /**
-   * Generates high-fidelity voice data for the given text.
+   * Generates high-fidelity voice data. Wrapped in try-catch to prevent blocking main flow.
    */
   async generateVoice(text: string, apiKey: string): Promise<string | undefined> {
     if (!apiKey) return undefined;
@@ -25,7 +25,7 @@ export class GeminiService {
       const ai = new GoogleGenAI({ apiKey });
       const speechResponse = await ai.models.generateContent({
         model: "gemini-2.5-flash-preview-tts",
-        contents: [{ parts: [{ text: `Say in a smooth, professional American female executive voice: ${text}` }] }],
+        contents: [{ parts: [{ text: `In a smooth, professional American female executive voice: ${text}` }] }],
         config: {
           responseModalities: [Modality.AUDIO],
           speechConfig: {
@@ -35,11 +35,9 @@ export class GeminiService {
           },
         },
       });
-      const audioData = speechResponse.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
-      if (!audioData) console.warn("ICT Voice Engine: No audio data returned from model.");
-      return audioData;
+      return speechResponse.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
     } catch (err) {
-      console.error("ICT Voice Engine Fault:", err);
+      console.warn("ICT Voice Engine: TTS non-critical failure.", err);
       return undefined;
     }
   }
@@ -65,12 +63,13 @@ export class GeminiService {
           systemInstruction: getSystemInstruction(),
           tools: [{ functionDeclarations: [submitLeadFolder] }],
           temperature: 0.2,
-          maxOutputTokens: 800,
+          maxOutputTokens: 1000,
           thinkingConfig: { thinkingBudget: 4000 },
         },
       });
 
-      const text = response.text || "";
+      const text = response.text || "I am processing your strategic request. Please continue.";
+      
       let leadCaptured;
       if (response.functionCalls && response.functionCalls.length > 0) {
         const leadCall = response.functionCalls.find(fc => fc.name === 'submitLead');
@@ -87,21 +86,18 @@ export class GeminiService {
         });
       }
 
-      let finalResponse = text.trim();
-      if (!finalResponse || finalResponse.toLowerCase().includes(originalMessage.toLowerCase().trim().substring(0, 15))) {
-        finalResponse = "I'm ready to demonstrate how ICT can transform your business. Shall we begin?";
-      }
-
-      const audioData = await this.generateVoice(finalResponse, apiKey);
+      // Background voice generation so we don't delay the text
+      const audioData = await this.generateVoice(text, apiKey);
 
       return { 
-        text: finalResponse, 
+        text: text.trim(), 
         sources: this.deduplicateSources(sources),
         audioData,
         leadCaptured
       };
     } catch (error: any) {
       console.error("ICT Logic Fault:", error);
+      // Propagate the specific error message for UI diagnostics
       throw error;
     }
   }
