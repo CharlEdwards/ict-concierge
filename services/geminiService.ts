@@ -17,7 +17,7 @@ const submitLeadFolder: FunctionDeclaration = {
 
 export class GeminiService {
   /**
-   * Processes queries using Gemini 3 Flash for zero-latency authoritative ICT support.
+   * Processes queries using Gemini 3 Pro for world-class reasoning and soft female speech.
    */
   async sendMessage(
     history: { role: 'user' | 'model'; parts: { text: string }[] }[],
@@ -28,23 +28,26 @@ export class GeminiService {
     audioData?: string;
     leadCaptured?: { firstName: string; phone: string; email: string };
   }> {
-    if (!process.env.API_KEY) {
-      throw new Error("API_KEY_MISSING: Secure access key not found in environment.");
+    // Note: process.env.API_KEY is automatically injected by the environment or key selection dialog.
+    const apiKey = process.env.API_KEY;
+    if (!apiKey) {
+      throw new Error("API_KEY_MISSING");
     }
 
     try {
-      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+      // Create a fresh instance for every call to ensure the latest API key is used.
+      const ai = new GoogleGenAI({ apiKey });
       
-      // 1. Generate Intelligence Response
-      // We use gemini-3-flash-preview for the best balance of speed and instruction adherence.
+      // 1. Intelligence Generation
       const response: GenerateContentResponse = await ai.models.generateContent({
-        model: 'gemini-3-flash-preview',
+        model: 'gemini-3-pro-preview',
         contents: history,
         config: {
           systemInstruction: getSystemInstruction(),
           tools: [{ functionDeclarations: [submitLeadFolder] }],
           temperature: 0.1,
-          maxOutputTokens: 400,
+          thinkingConfig: { thinkingBudget: 4000 },
+          maxOutputTokens: 600,
         },
       });
 
@@ -67,15 +70,14 @@ export class GeminiService {
 
       let finalResponse = text.trim();
       
-      // ANTI-ECHO PROTECTION:
-      // Fallback if the model mirrors the user or fails to provide an authoritative ICT answer.
+      // Mirroring Prevention: Force authoritative fallback if AI repeats the question.
       const normalizedOriginal = originalMessage.toLowerCase().trim();
       if (!finalResponse || finalResponse.toLowerCase().includes(normalizedOriginal.substring(0, 15))) {
-        finalResponse = "Inner City Technology specializes in world-class Managed IT Services, Cybersecurity, and CompTIA IT Certification training. We bridge the digital divide. Contact us at 213-810-7325 to begin your journey.";
+        finalResponse = "Inner City Technology specializes in world-class Managed IT, Cybersecurity, and IT Career training. We bridge the digital divide for inner-city talent. Please call 213-810-7325 for an immediate consultation.";
       }
 
-      // 2. Generate Professional Female Speech (Kore)
-      const audioData = await this.generateVoice(finalResponse);
+      // 2. Obsidian Voice Synthesis (Kore: Soft, Smooth Professional Female)
+      const audioData = await this.generateVoice(finalResponse, apiKey);
 
       return { 
         text: finalResponse, 
@@ -89,15 +91,12 @@ export class GeminiService {
     }
   }
 
-  /**
-   * Synthesizes soft, smooth, professional female speech.
-   */
-  private async generateVoice(text: string): Promise<string | undefined> {
+  private async generateVoice(text: string, apiKey: string): Promise<string | undefined> {
     try {
-      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY! });
+      const ai = new GoogleGenAI({ apiKey });
       const speechResponse = await ai.models.generateContent({
         model: "gemini-2.5-flash-preview-tts",
-        contents: [{ parts: [{ text: `Say in a soft, attractive, smooth professional American female voice: ${text}` }] }],
+        contents: [{ parts: [{ text: `Say in a soft, attractive, smooth, professional American female voice: ${text}` }] }],
         config: {
           responseModalities: [Modality.AUDIO],
           speechConfig: {
@@ -109,7 +108,7 @@ export class GeminiService {
       });
       return speechResponse.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
     } catch (err) {
-      console.warn("Vocal channel congested, skipping synthesis.");
+      console.warn("Vocal synthesis channel congested.");
       return undefined;
     }
   }
