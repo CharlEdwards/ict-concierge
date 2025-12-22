@@ -17,7 +17,7 @@ const submitLeadFolder: FunctionDeclaration = {
 
 export class GeminiService {
   /**
-   * Processes text queries and generates high-fidelity voice output.
+   * Processes queries using Gemini 3 Pro with enhanced reasoning and TTS.
    */
   async sendMessage(
     history: { role: 'user' | 'model'; parts: { text: string }[] }[],
@@ -31,20 +31,21 @@ export class GeminiService {
     try {
       const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
       
-      // CRITICAL FIX: The Gemini API fails if the history starts with a 'model' role.
-      // We must slice the history to start at the first 'user' interaction.
-      const firstUserIndex = history.findIndex(h => h.role === 'user');
-      const sanitizedHistory = firstUserIndex !== -1 ? history.slice(firstUserIndex) : history;
+      // CRITICAL: The API will fail (Handshake Timeout) if history doesn't alternate User -> Model.
+      // We skip the first welcome message (model) to ensure the very first entry is 'user'.
+      const startIndex = history.findIndex(h => h.role === 'user');
+      const sanitizedHistory = startIndex !== -1 ? history.slice(startIndex) : history;
 
-      // 1. Generate Text Response
+      // 1. Generate Intelligence with Reasoning
       const response: GenerateContentResponse = await ai.models.generateContent({
-        model: 'gemini-3-flash-preview',
+        model: 'gemini-3-pro-preview',
         contents: sanitizedHistory,
         config: {
           systemInstruction: getSystemInstruction(),
           tools: [{ functionDeclarations: [submitLeadFolder] }],
-          temperature: 0.1, // Near zero to prevent conversational drift/echoing
-          maxOutputTokens: 300,
+          temperature: 0.1,
+          thinkingConfig: { thinkingBudget: 4000 }, // Added thinking budget for deep ICT data retrieval
+          maxOutputTokens: 500,
         },
       });
 
@@ -65,16 +66,16 @@ export class GeminiService {
         });
       }
 
-      const finalResponse = text.trim();
+      let finalResponse = text.trim();
       
-      // Secondary check: If the bot just echoed or failed, use authoritative fallback
-      if (!finalResponse || finalResponse.toLowerCase().includes(originalMessage.toLowerCase().substring(0, 10))) {
-        const fallback = "ICT specializes in Managed IT Services, Cybersecurity, and IT Training. How can we assist your business today?";
-        const audio = await this.generateVoice(fallback);
-        return { text: fallback, sources: [], audioData: audio };
+      // ANTI-ECHO PROTECTION:
+      // If the model is lazy and repeats the user, we force the authoritative ICT answer.
+      const normalizedOriginal = originalMessage.toLowerCase().trim();
+      if (!finalResponse || finalResponse.toLowerCase().includes(normalizedOriginal)) {
+        finalResponse = "Inner City Technology specializes in Managed IT, Cybersecurity, and Professional IT training. You can get started by calling us at 213-810-7325 or emailing info@innercitytechnology.com.";
       }
 
-      // 2. Generate Voice Response (Professional Female Voice 'Kore')
+      // 2. Synthesize Obsidian Voice (Soft, Professional American Female)
       const audioData = await this.generateVoice(finalResponse);
 
       return { 
@@ -83,33 +84,34 @@ export class GeminiService {
         audioData,
         leadCaptured
       };
-    } catch (error) {
-      console.error("Gemini Core Intelligence Failure:", error);
+    } catch (error: any) {
+      console.error("Gemini Critical Engine Fault:", error);
+      // Detailed logging to help identify why the "Handshake" failed
+      if (error.message?.includes("400")) {
+        throw new Error("API Sequence Error: History must alternate User and Model roles.");
+      }
       throw error;
     }
   }
 
-  /**
-   * Generates professional female speech using Gemini TTS
-   */
   private async generateVoice(text: string): Promise<string | undefined> {
     try {
       const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
       const speechResponse = await ai.models.generateContent({
         model: "gemini-2.5-flash-preview-tts",
-        contents: [{ parts: [{ text: `Say with a professional, smooth, and helpful American female tone: ${text}` }] }],
+        contents: [{ parts: [{ text: `Say in a soft, smooth, attractive, professional American female voice: ${text}` }] }],
         config: {
           responseModalities: [Modality.AUDIO],
           speechConfig: {
             voiceConfig: {
-              prebuiltVoiceConfig: { voiceName: 'Kore' }, // 'Kore' is a warm, professional female voice
+              prebuiltVoiceConfig: { voiceName: 'Kore' }, 
             },
           },
         },
       });
       return speechResponse.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
     } catch (err) {
-      console.warn("Speech generation skipped due to engine load.", err);
+      console.warn("TTS Synthesis bypass due to network load.");
       return undefined;
     }
   }
