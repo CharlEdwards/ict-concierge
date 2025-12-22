@@ -11,7 +11,6 @@ const InputArea: React.FC<InputAreaProps> = ({ onSendMessage, isLoading }) => {
   const [isListening, setIsListening] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const recognitionRef = useRef<any>(null);
-  const config = INDUSTRY_CONFIG.options[INDUSTRY_CONFIG.current] || INDUSTRY_CONFIG.options.TECHNOLOGY;
 
   const handleSubmit = (e?: React.FormEvent) => {
     e?.preventDefault();
@@ -59,11 +58,11 @@ const InputArea: React.FC<InputAreaProps> = ({ onSendMessage, isLoading }) => {
 
   return (
     <div className="bg-transparent">
-      <form onSubmit={handleSubmit} className="relative flex items-center gap-5">
+      <form onSubmit={handleSubmit} className="relative flex items-center gap-4">
         <button
           type="button"
           onClick={toggleListening}
-          className={`w-16 h-16 rounded-[1.8rem] transition-all flex-shrink-0 flex items-center justify-center border-2 ${
+          className={`w-14 h-14 md:w-16 md:h-16 rounded-[1.8rem] transition-all flex-shrink-0 flex items-center justify-center border-2 ${
             isListening 
               ? 'bg-red-500 border-red-500 text-white shadow-xl shadow-red-500/20' 
               : `bg-slate-50 border-slate-50 text-slate-400 hover:border-blue-600 hover:text-blue-600`
@@ -88,26 +87,26 @@ const InputArea: React.FC<InputAreaProps> = ({ onSendMessage, isLoading }) => {
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="Describe your request..."
-            className={`w-full bg-[#f8fafc] text-slate-900 rounded-[2.2rem] px-8 py-6 pr-20 focus:outline-none focus:ring-4 focus:ring-blue-600/5 focus:bg-white border border-slate-100 transition-all resize-none min-h-[72px] font-bold text-[16px] placeholder:text-slate-300 shadow-sm`}
+            className={`w-full bg-[#f8fafc] text-slate-900 rounded-[2rem] px-6 py-5 md:px-8 md:py-6 pr-16 focus:outline-none focus:ring-4 focus:ring-blue-600/5 focus:bg-white border border-slate-100 transition-all resize-none min-h-[64px] font-bold text-[16px] placeholder:text-slate-300 shadow-sm`}
             disabled={isLoading}
           />
-          <div className="absolute right-5 top-1/2 -translate-y-1/2">
+          <div className="absolute right-4 top-1/2 -translate-y-1/2">
             <button
               type="submit"
               disabled={!input.trim() || isLoading}
-              className={`w-12 h-12 rounded-[1.2rem] flex items-center justify-center transition-all ${
+              className={`w-10 h-10 md:w-12 md:h-12 rounded-[1.2rem] flex items-center justify-center transition-all ${
                 input.trim() && !isLoading
                   ? `bg-blue-600 text-white shadow-xl shadow-blue-600/30 scale-100`
                   : 'bg-slate-200 text-white scale-90 opacity-0 pointer-events-none'
               }`}
             >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 12h14M12 5l7 7-7 7" /></svg>
+              <svg className="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 12h14M12 5l7 7-7 7" /></svg>
             </button>
           </div>
         </div>
       </form>
       <div className="h-6"></div>
-      <p className="text-center text-[10px] text-slate-300 font-black uppercase tracking-[0.5em] pointer-events-none">Obsidian Protocol v25.0 Closer Architecture</p>
+      <p className="text-center text-[9px] md:text-[10px] text-slate-300 font-black uppercase tracking-[0.4em] pointer-events-none">Obsidian Protocol v26.0 Fail-Safe Logic</p>
     </div>
   );
 };
