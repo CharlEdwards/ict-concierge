@@ -1,4 +1,4 @@
-import { GoogleGenAI, GenerateContentResponse, FunctionDeclaration, Type, Chat } from "@google/genai";
+import { GoogleGenAI, GenerateContentResponse, FunctionDeclaration, Type } from "@google/genai";
 import { getSystemInstruction } from "../constants";
 
 const submitLeadFolder: FunctionDeclaration = {
@@ -17,11 +17,11 @@ const submitLeadFolder: FunctionDeclaration = {
 
 export class GeminiService {
   /**
-   * Sends a message using a Chat session to maintain proper context and prevent echoing.
+   * Processes the message using high-precision generateContent to ensure specific answers.
    */
   async sendMessage(
     history: { role: 'user' | 'model'; parts: { text: string }[] }[],
-    message: string
+    _message: string
   ): Promise<{ 
     text: string; 
     sources: { uri: string; title: string }[];
@@ -30,34 +30,32 @@ export class GeminiService {
     try {
       const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
       
-      // Use the Pro model for higher quality reasoning and better instruction following
-      const chat: Chat = ai.chats.create({
-        model: 'gemini-3-pro-preview',
-        history: history.slice(0, -1), // Everything except the latest user message
+      // Use Flash for high-speed, direct responses that follow instructions strictly
+      const response: GenerateContentResponse = await ai.models.generateContent({
+        model: 'gemini-3-flash-preview',
+        contents: history,
         config: {
           systemInstruction: getSystemInstruction(),
-          tools: [
-            { functionDeclarations: [submitLeadFolder] }
-          ],
+          tools: [{ functionDeclarations: [submitLeadFolder] }],
+          temperature: 0.7, // Balanced for precision and natural flow
+          topP: 0.9,
+          maxOutputTokens: 500,
         },
       });
 
-      // Send the actual message separately to ensure the model responds to it
-      const result: GenerateContentResponse = await chat.sendMessage({ message });
-
-      const text = result.text || "";
+      const text = response.text || "";
       let leadCaptured;
 
-      const fcs = result.functionCalls;
-      if (fcs && fcs.length > 0) {
-        const leadCall = fcs.find(fc => fc.name === 'submitLead');
+      // Extract tool calls
+      if (response.functionCalls && response.functionCalls.length > 0) {
+        const leadCall = response.functionCalls.find(fc => fc.name === 'submitLead');
         if (leadCall) {
           leadCaptured = leadCall.args as any;
         }
       }
       
       const sources: { uri: string; title: string }[] = [];
-      const gm = result.candidates?.[0]?.groundingMetadata;
+      const gm = response.candidates?.[0]?.groundingMetadata;
       if (gm?.groundingChunks) {
         gm.groundingChunks.forEach((chunk: any) => {
           if (chunk.web?.uri) {
@@ -66,8 +64,17 @@ export class GeminiService {
         });
       }
 
+      // Safeguard against empty or repeating responses
+      const finalResponse = text.trim();
+      if (!finalResponse || finalResponse.toLowerCase() === _message.toLowerCase()) {
+        return {
+          text: "ICT is a premier technology provider specializing in Managed IT Services, Cybersecurity, and Professional IT Training (CompTIA). How can we help you scale today?",
+          sources: []
+        };
+      }
+
       return { 
-        text: text || (leadCaptured ? "Strategic Alert: Your lead profile has been transmitted to our executive leadership team. We will connect shortly." : "Synthesis complete. Please proceed."), 
+        text: finalResponse, 
         sources: this.deduplicateSources(sources),
         leadCaptured
       };
