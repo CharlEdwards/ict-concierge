@@ -1,4 +1,4 @@
-import { GoogleGenAI, GenerateContentResponse, FunctionDeclaration, Type, Chat } from "@google/genai";
+import { GoogleGenAI, GenerateContentResponse, FunctionDeclaration, Type, Modality } from "@google/genai";
 import { getSystemInstruction } from "../constants";
 
 const submitLeadFolder: FunctionDeclaration = {
@@ -7,9 +7,9 @@ const submitLeadFolder: FunctionDeclaration = {
     type: Type.OBJECT,
     description: 'Submit customer lead information for business follow-up.',
     properties: {
-      firstName: { type: Type.STRING, description: 'The customer first name' },
-      phone: { type: Type.STRING, description: 'The customer phone number' },
-      email: { type: Type.STRING, description: 'The customer email address' },
+      firstName: { type: Type.STRING },
+      phone: { type: Type.STRING },
+      email: { type: Type.STRING },
     },
     required: ['firstName', 'phone', 'email'],
   },
@@ -17,44 +17,46 @@ const submitLeadFolder: FunctionDeclaration = {
 
 export class GeminiService {
   /**
-   * Sends a message using a managed Chat session to ensure proper role alternation and context.
+   * Processes text queries and generates high-fidelity voice output.
    */
   async sendMessage(
     history: { role: 'user' | 'model'; parts: { text: string }[] }[],
-    message: string
+    originalMessage: string
   ): Promise<{ 
     text: string; 
     sources: { uri: string; title: string }[];
+    audioData?: string;
     leadCaptured?: { firstName: string; phone: string; email: string };
   }> {
     try {
       const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
       
-      // Initialize Chat with history (excluding the very latest user message which is sent via sendMessage)
-      const chat: Chat = ai.chats.create({
+      // CRITICAL FIX: The Gemini API fails if the history starts with a 'model' role.
+      // We must slice the history to start at the first 'user' interaction.
+      const firstUserIndex = history.findIndex(h => h.role === 'user');
+      const sanitizedHistory = firstUserIndex !== -1 ? history.slice(firstUserIndex) : history;
+
+      // 1. Generate Text Response
+      const response: GenerateContentResponse = await ai.models.generateContent({
         model: 'gemini-3-flash-preview',
-        history: history.slice(0, -1),
+        contents: sanitizedHistory,
         config: {
           systemInstruction: getSystemInstruction(),
           tools: [{ functionDeclarations: [submitLeadFolder] }],
-          temperature: 0.2, // Low temperature for maximum factual accuracy
-          topP: 0.8,
+          temperature: 0.1, // Near zero to prevent conversational drift/echoing
+          maxOutputTokens: 300,
         },
       });
 
-      // Send the current message
-      const result: GenerateContentResponse = await chat.sendMessage({ message });
-      const text = result.text || "";
-      
+      const text = response.text || "";
       let leadCaptured;
-      const fcs = result.functionCalls;
-      if (fcs && fcs.length > 0) {
-        const leadCall = fcs.find(fc => fc.name === 'submitLead');
+      if (response.functionCalls && response.functionCalls.length > 0) {
+        const leadCall = response.functionCalls.find(fc => fc.name === 'submitLead');
         if (leadCall) leadCaptured = leadCall.args as any;
       }
       
       const sources: { uri: string; title: string }[] = [];
-      const gm = result.candidates?.[0]?.groundingMetadata;
+      const gm = response.candidates?.[0]?.groundingMetadata;
       if (gm?.groundingChunks) {
         gm.groundingChunks.forEach((chunk: any) => {
           if (chunk.web?.uri) {
@@ -63,24 +65,52 @@ export class GeminiService {
         });
       }
 
-      // Final validation to ensure no echoing occurred
       const finalResponse = text.trim();
-      if (!finalResponse || finalResponse.toLowerCase().includes(message.toLowerCase().substring(0, 10))) {
-        // Fallback for safety if the model glitches
-        return {
-          text: "Inner City Technology specializes in Managed IT Services, Cybersecurity, and IT Training (CompTIA A+/Security+). How can we assist your business today?",
-          sources: []
-        };
+      
+      // Secondary check: If the bot just echoed or failed, use authoritative fallback
+      if (!finalResponse || finalResponse.toLowerCase().includes(originalMessage.toLowerCase().substring(0, 10))) {
+        const fallback = "ICT specializes in Managed IT Services, Cybersecurity, and IT Training. How can we assist your business today?";
+        const audio = await this.generateVoice(fallback);
+        return { text: fallback, sources: [], audioData: audio };
       }
+
+      // 2. Generate Voice Response (Professional Female Voice 'Kore')
+      const audioData = await this.generateVoice(finalResponse);
 
       return { 
         text: finalResponse, 
         sources: this.deduplicateSources(sources),
+        audioData,
         leadCaptured
       };
     } catch (error) {
-      console.error("Gemini Session Error:", error);
+      console.error("Gemini Core Intelligence Failure:", error);
       throw error;
+    }
+  }
+
+  /**
+   * Generates professional female speech using Gemini TTS
+   */
+  private async generateVoice(text: string): Promise<string | undefined> {
+    try {
+      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+      const speechResponse = await ai.models.generateContent({
+        model: "gemini-2.5-flash-preview-tts",
+        contents: [{ parts: [{ text: `Say with a professional, smooth, and helpful American female tone: ${text}` }] }],
+        config: {
+          responseModalities: [Modality.AUDIO],
+          speechConfig: {
+            voiceConfig: {
+              prebuiltVoiceConfig: { voiceName: 'Kore' }, // 'Kore' is a warm, professional female voice
+            },
+          },
+        },
+      });
+      return speechResponse.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
+    } catch (err) {
+      console.warn("Speech generation skipped due to engine load.", err);
+      return undefined;
     }
   }
 
