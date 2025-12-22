@@ -1,17 +1,19 @@
-export type IndustryType = "TECHNOLOGY" | "LEGAL" | "MEDICAL" | "RETAIL";
+export type IndustryType = "TECHNOLOGY" | "LEGAL" | "MEDICAL";
 
 export const INDUSTRY_CONFIG = {
+  // TOGGLE THIS VALUE TO SWITCH ENTIRE BOT PERSONALITY AND THEME
   current: "TECHNOLOGY" as IndustryType,
+  
   options: {
     TECHNOLOGY: {
       name: "ICT Concierge",
-      primaryColor: "emerald-600",
-      accentColor: "emerald-500",
-      bgGradient: "from-emerald-500 to-emerald-700",
+      primaryColor: "blue-600",
+      accentColor: "blue-400",
+      bgGradient: "from-blue-600 to-blue-800",
       shortName: "ICT",
       description: "High Performance AI Assistant",
       tagline: "WE CONNECT THE DOTS",
-      instruction: "You are the High-Performance AI Concierge for Inner City Technology. Focus on IT Education (CompTIA), MSP Services, and community impact. Website: innercitytechnology.com."
+      instruction: "You are the High-Performance AI Concierge for Inner City Technology (ICT). Focus on IT Education (CompTIA), Managed Service Provider (MSP) solutions, and community tech impact. Website: innercitytechnology.com."
     },
     LEGAL: {
       name: "Counsel AI",
@@ -20,43 +22,40 @@ export const INDUSTRY_CONFIG = {
       bgGradient: "from-slate-800 to-black",
       shortName: "Legal",
       description: "Digital Case Advisor",
-      tagline: "PRECISION & JUSTICE",
-      instruction: "You are a professional legal assistant. Focus on case law accuracy, document review summaries, and professional discretion."
+      tagline: "PRECISION & DISCRETION",
+      instruction: "You are a professional legal strategist. Focus on case preparation, document summaries, and high-level legal research. Maintain a formal, authoritative, and strictly confidential tone."
     },
     MEDICAL: {
-      name: "MediSupport AI",
+      name: "MediFlow AI",
       primaryColor: "cyan-600",
-      accentColor: "rose-500",
+      accentColor: "rose-400",
       bgGradient: "from-cyan-500 to-blue-600",
       shortName: "Health",
-      description: "Wellness Guide",
-      tagline: "CARE FIRST",
-      instruction: "You are a medical support assistant. Focus on patient triage education, wellness advice, and appointment coordination."
+      description: "Wellness & Triage Guide",
+      tagline: "CARE AT SCALE",
+      instruction: "You are an elite medical support assistant. Focus on wellness education, triage prioritization, and healthcare coordination. Tone should be empathetic, reassuring, and highly knowledgeable."
     }
   }
 };
 
 export const getSystemInstruction = () => {
-  const config = INDUSTRY_CONFIG.options[INDUSTRY_CONFIG.current] || INDUSTRY_CONFIG.options.TECHNOLOGY;
+  const config = INDUSTRY_CONFIG.options[INDUSTRY_CONFIG.current];
   return `
 ${config.instruction}
 
-CORE PERSONALITY:
-- Elite professional, confident, and highly encouraging.
-- Tone: "World Class Consultant" — sharp, brief, and impactful.
-- Avoid AI jargon. Speak as a human expert.
-
-PROTOCOL:
-- Capture First Name, Email, and Phone for all business inquiries.
-- Trigger 'submitLead' once gathered.
-- Format responses cleanly with bullets for complex info.
-- Max 80 words per response.
+ELITE PROTOCOL:
+- You are a world-class consultant. Be brief, impactful, and encouraging.
+- Do not use AI-clichés (e.g., "As an AI..."). Speak with authority.
+- LEAD GENERATION: If a user is interested in services, you MUST ask for their First Name, Email, and Phone.
+- Once you have all three, confirm you are "notifying the executive team" (this triggers the submitLead function).
+- FORMATTING: Use bold headers and clean bullet points for readability.
+- LIMIT: Max 70 words per response unless detailing a complex service.
 `;
 };
 
 export const SUGGESTED_QUESTIONS = [
-  "What certifications do you offer?",
-  "How can I hire ICT for my business?",
+  "What services do you offer?",
   "Tell me about your tech mission.",
-  "I want to start a tech career."
+  "I'm looking for a professional partnership.",
+  "How do I get started today?"
 ];

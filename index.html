@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" />
-    <title>ICT Concierge | High-Performance AI</title>
+    <title>Elite Concierge | Inner City Technology</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -27,16 +27,17 @@
         transition: opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1);
       }
       .ict-dot {
-        width: 12px;
-        height: 12px;
-        background: #10b981;
+        width: 14px;
+        height: 14px;
+        background: #2563eb;
         border-radius: 50%;
         animation: pulse 2s infinite ease-in-out;
+        box-shadow: 0 0 20px rgba(37, 99, 235, 0.4);
       }
       @keyframes pulse {
-        0% { transform: scale(0.9); opacity: 0.5; box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); }
-        50% { transform: scale(1.1); opacity: 1; box-shadow: 0 0 20px 10px rgba(16, 185, 129, 0); }
-        100% { transform: scale(0.9); opacity: 0.5; box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); }
+        0% { transform: scale(0.9); opacity: 0.5; box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.4); }
+        50% { transform: scale(1.1); opacity: 1; box-shadow: 0 0 30px 15px rgba(37, 99, 235, 0); }
+        100% { transform: scale(0.9); opacity: 0.5; box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.4); }
       }
       .fade-out { opacity: 0; pointer-events: none; }
     </style>
@@ -45,7 +46,7 @@
   <body>
     <div id="loading-overlay">
       <div class="ict-dot"></div>
-      <p style="color: #64748b; font-size: 10px; font-weight: 900; margin-top: 24px; letter-spacing: 0.4em; text-transform: uppercase;">Engine V8.1 Initializing</p>
+      <p style="color: #64748b; font-size: 11px; font-weight: 900; margin-top: 32px; letter-spacing: 0.5em; text-transform: uppercase;">Engine V8.6 Sapphire Edition</p>
     </div>
     
     <div id="root"></div>
@@ -55,7 +56,8 @@
         const overlay = document.getElementById('loading-overlay');
         if (overlay) overlay.classList.add('fade-out');
       };
-      setTimeout(window.hideICTLoader, 3000);
+      // Short delay for high-end loading feel
+      setTimeout(window.hideICTLoader, 2500);
     </script>
     
     <script type="module" src="/index.tsx"></script>
