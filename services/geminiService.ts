@@ -1,8 +1,6 @@
-
 import { GoogleGenAI, GenerateContentResponse, FunctionDeclaration, Type } from "@google/genai";
 import { getSystemInstruction } from "../constants";
 
-// Defined the function for gathering lead information.
 const submitLeadFolder: FunctionDeclaration = {
   name: 'submitLead',
   parameters: {
@@ -20,60 +18,73 @@ const submitLeadFolder: FunctionDeclaration = {
 export class GeminiService {
   /**
    * Sends a message to the Gemini model and handles the response.
-   * Note: The googleSearch tool is omitted here because it cannot be combined with function calling 
-   * per SDK guidelines: "Only tools: googleSearch is permitted. Do not use it with other tools."
    */
   async sendMessage(
     history: { role: 'user' | 'model'; parts: { text: string }[] }[],
-    message: string
+    _message: string // message is already included in the history array from App.tsx
   ): Promise<{ 
     text: string; 
     sources: { uri: string; title: string }[];
     leadCaptured?: { firstName: string; phone: string; email: string };
   }> {
     try {
-      // Fix: Use process.env.API_KEY exclusively for initialization as per guidelines.
+      // Initialize with the standard environment key
       const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
       
+      // Use history directly as contents since it already includes the latest user message
       const response: GenerateContentResponse = await ai.models.generateContent({
         model: 'gemini-3-flash-preview',
-        contents: [
-          ...history,
-          { role: 'user', parts: [{ text: message }] }
-        ],
+        contents: history,
         config: {
           systemInstruction: getSystemInstruction(),
           tools: [
-            // Fix: Removing googleSearch tool to comply with combination restrictions when using function declarations.
             { functionDeclarations: [submitLeadFolder] }
           ],
         },
       });
 
-      // Fix: .text is a property, not a method.
+      // Use the .text property as defined in the latest SDK
       const text = response.text || "";
       let leadCaptured;
 
-      // Fix: Extract function calls using the .functionCalls property on the response.
-      const functionCalls = response.functionCalls;
-      if (functionCalls) {
-        const leadCall = functionCalls.find(fc => fc.name === 'submitLead');
+      // Extract function calls from the dedicated response property
+      const fcs = response.functionCalls;
+      if (fcs && fcs.length > 0) {
+        const leadCall = fcs.find(fc => fc.name === 'submitLead');
         if (leadCall) {
           leadCaptured = leadCall.args as any;
         }
       }
       
       const sources: { uri: string; title: string }[] = [];
+      // Grounding URLs are extracted if present in groundingMetadata
+      const gm = response.candidates?.[0]?.groundingMetadata;
+      if (gm?.groundingChunks) {
+        gm.groundingChunks.forEach((chunk: any) => {
+          if (chunk.web?.uri) {
+            sources.push({ uri: chunk.web.uri, title: chunk.web.title || chunk.web.uri });
+          }
+        });
+      }
 
       return { 
-        text: text || (leadCaptured ? "Information acknowledged. Our elite team has been notified." : "Connecting to core engine..."), 
-        sources,
+        text: text || (leadCaptured ? "System alert: Lead information successfully captured. Our executive team has been notified." : "Processing..."), 
+        sources: this.deduplicateSources(sources),
         leadCaptured
       };
     } catch (error) {
-      console.error("Gemini Service Error:", error);
+      console.error("Gemini Service Error Detail:", error);
       throw error;
     }
+  }
+
+  private deduplicateSources(sources: { uri: string; title: string }[]): { uri: string; title: string }[] {
+    const seen = new Set();
+    return sources.filter(s => {
+      if (seen.has(s.uri)) return false;
+      seen.add(s.uri);
+      return true;
+    });
   }
 }
 
