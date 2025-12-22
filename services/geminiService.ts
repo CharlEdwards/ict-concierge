@@ -1,5 +1,5 @@
 import { GoogleGenAI, GenerateContentResponse, FunctionDeclaration, Type } from "@google/genai";
-import { ICT_SYSTEM_INSTRUCTION } from "../ict-system-config";
+import { getSystemInstruction } from "../constants";
 
 const submitLeadFolder: FunctionDeclaration = {
   name: 'submitLead',
@@ -41,7 +41,7 @@ export class GeminiService {
           { role: 'user', parts: [{ text: message }] }
         ],
         config: {
-          systemInstruction: ICT_SYSTEM_INSTRUCTION,
+          systemInstruction: getSystemInstruction(),
           tools: [
             { googleSearch: {} },
             { functionDeclarations: [submitLeadFolder] }
@@ -71,7 +71,7 @@ export class GeminiService {
       }
 
       return { 
-        text: text || (leadCaptured ? "Transmission Successful. Our team will contact you within 24 hours." : "Link interrupted. Please refresh or restate."), 
+        text: text || (leadCaptured ? "Information acknowledged. Our elite team has been notified." : "Connecting to core engine..."), 
         sources: this.deduplicateSources(sources),
         leadCaptured
       };
