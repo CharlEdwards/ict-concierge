@@ -17,7 +17,7 @@ const submitLeadFolder: FunctionDeclaration = {
 
 export class GeminiService {
   /**
-   * Processes queries using Gemini 3 Flash for zero-latency authoritative support.
+   * Processes queries using Gemini 3 Pro for world-class reasoning and sales performance.
    */
   async sendMessage(
     history: { role: 'user' | 'model'; parts: { text: string }[] }[],
@@ -28,26 +28,23 @@ export class GeminiService {
     audioData?: string;
     leadCaptured?: { firstName: string; phone: string; email: string };
   }> {
-    // ALWAYS pull the latest API key from the environment/dialog injection
     const apiKey = process.env.API_KEY;
     if (!apiKey) {
       throw new Error("AUTH_REQUIRED");
     }
 
     try {
-      // Create new instance per instruction to avoid stale keys
       const ai = new GoogleGenAI({ apiKey });
       
-      // 1. Intelligence Response
       const response: GenerateContentResponse = await ai.models.generateContent({
-        model: 'gemini-3-flash-preview',
+        model: 'gemini-3-pro-preview', // UPGRADED FOR WORLD CLASS SALES
         contents: history,
         config: {
           systemInstruction: getSystemInstruction(),
           tools: [{ functionDeclarations: [submitLeadFolder] }],
-          temperature: 0.1,
-          maxOutputTokens: 500,
-          thinkingConfig: { thinkingBudget: 0 }, // Minimize latency for free-tier users
+          temperature: 0.2,
+          maxOutputTokens: 800,
+          thinkingConfig: { thinkingBudget: 4000 }, // ENABLED FOR SUPERIOR CONSULTATIVE REASONING
         },
       });
 
@@ -70,13 +67,10 @@ export class GeminiService {
 
       let finalResponse = text.trim();
       
-      // ANTI-ECHO GUARD
-      const normalizedOriginal = originalMessage.toLowerCase().trim();
-      if (!finalResponse || finalResponse.toLowerCase().includes(normalizedOriginal.substring(0, 15))) {
-        finalResponse = "Inner City Technology specializes in Managed IT Services, Cybersecurity, and Professional IT training. We bridge the digital divide. Call 213-810-7325 or email info@innercitytechnology.com to begin.";
+      if (!finalResponse || finalResponse.toLowerCase().includes(originalMessage.toLowerCase().trim().substring(0, 15))) {
+        finalResponse = "Inner City Technology specialize in Managed IT, Cybersecurity, and Professional Bootcamps. I'm ready to demonstrate how I can transform your business engagement. Shall we begin?";
       }
 
-      // 2. Synthesize Professional Female Voice (Kore)
       const audioData = await this.generateVoice(finalResponse, apiKey);
 
       return { 
@@ -88,7 +82,6 @@ export class GeminiService {
     } catch (error: any) {
       console.error("ICT Engine Fault:", error);
       const msg = error.message?.toLowerCase() || "";
-      // Detect billing/key/entity errors to trigger re-auth
       if (msg.includes("quota") || msg.includes("api key") || msg.includes("billing") || msg.includes("not found") || msg.includes("entity")) {
         throw new Error("AUTH_REQUIRED");
       }
@@ -101,7 +94,7 @@ export class GeminiService {
       const ai = new GoogleGenAI({ apiKey });
       const speechResponse = await ai.models.generateContent({
         model: "gemini-2.5-flash-preview-tts",
-        contents: [{ parts: [{ text: `Say in a soft, smooth, professional American female voice: ${text}` }] }],
+        contents: [{ parts: [{ text: `Say in a smooth, high-end, professional American female executive voice: ${text}` }] }],
         config: {
           responseModalities: [Modality.AUDIO],
           speechConfig: {
