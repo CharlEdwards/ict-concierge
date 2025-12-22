@@ -17,7 +17,7 @@ const submitLeadFolder: FunctionDeclaration = {
 
 export class GeminiService {
   /**
-   * Processes queries using Gemini 3 Pro with enhanced reasoning and TTS.
+   * Processes queries using Gemini 3 Flash for zero-latency authoritative ICT support.
    */
   async sendMessage(
     history: { role: 'user' | 'model'; parts: { text: string }[] }[],
@@ -28,24 +28,23 @@ export class GeminiService {
     audioData?: string;
     leadCaptured?: { firstName: string; phone: string; email: string };
   }> {
+    if (!process.env.API_KEY) {
+      throw new Error("API_KEY_MISSING: Secure access key not found in environment.");
+    }
+
     try {
       const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
       
-      // CRITICAL: The API will fail (Handshake Timeout) if history doesn't alternate User -> Model.
-      // We skip the first welcome message (model) to ensure the very first entry is 'user'.
-      const startIndex = history.findIndex(h => h.role === 'user');
-      const sanitizedHistory = startIndex !== -1 ? history.slice(startIndex) : history;
-
-      // 1. Generate Intelligence with Reasoning
+      // 1. Generate Intelligence Response
+      // We use gemini-3-flash-preview for the best balance of speed and instruction adherence.
       const response: GenerateContentResponse = await ai.models.generateContent({
-        model: 'gemini-3-pro-preview',
-        contents: sanitizedHistory,
+        model: 'gemini-3-flash-preview',
+        contents: history,
         config: {
           systemInstruction: getSystemInstruction(),
           tools: [{ functionDeclarations: [submitLeadFolder] }],
           temperature: 0.1,
-          thinkingConfig: { thinkingBudget: 4000 }, // Added thinking budget for deep ICT data retrieval
-          maxOutputTokens: 500,
+          maxOutputTokens: 400,
         },
       });
 
@@ -69,13 +68,13 @@ export class GeminiService {
       let finalResponse = text.trim();
       
       // ANTI-ECHO PROTECTION:
-      // If the model is lazy and repeats the user, we force the authoritative ICT answer.
+      // Fallback if the model mirrors the user or fails to provide an authoritative ICT answer.
       const normalizedOriginal = originalMessage.toLowerCase().trim();
-      if (!finalResponse || finalResponse.toLowerCase().includes(normalizedOriginal)) {
-        finalResponse = "Inner City Technology specializes in Managed IT, Cybersecurity, and Professional IT training. You can get started by calling us at 213-810-7325 or emailing info@innercitytechnology.com.";
+      if (!finalResponse || finalResponse.toLowerCase().includes(normalizedOriginal.substring(0, 15))) {
+        finalResponse = "Inner City Technology specializes in world-class Managed IT Services, Cybersecurity, and CompTIA IT Certification training. We bridge the digital divide. Contact us at 213-810-7325 to begin your journey.";
       }
 
-      // 2. Synthesize Obsidian Voice (Soft, Professional American Female)
+      // 2. Generate Professional Female Speech (Kore)
       const audioData = await this.generateVoice(finalResponse);
 
       return { 
@@ -85,21 +84,20 @@ export class GeminiService {
         leadCaptured
       };
     } catch (error: any) {
-      console.error("Gemini Critical Engine Fault:", error);
-      // Detailed logging to help identify why the "Handshake" failed
-      if (error.message?.includes("400")) {
-        throw new Error("API Sequence Error: History must alternate User and Model roles.");
-      }
+      console.error("ICT Intelligence Core Error:", error);
       throw error;
     }
   }
 
+  /**
+   * Synthesizes soft, smooth, professional female speech.
+   */
   private async generateVoice(text: string): Promise<string | undefined> {
     try {
-      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY! });
       const speechResponse = await ai.models.generateContent({
         model: "gemini-2.5-flash-preview-tts",
-        contents: [{ parts: [{ text: `Say in a soft, smooth, attractive, professional American female voice: ${text}` }] }],
+        contents: [{ parts: [{ text: `Say in a soft, attractive, smooth professional American female voice: ${text}` }] }],
         config: {
           responseModalities: [Modality.AUDIO],
           speechConfig: {
@@ -111,7 +109,7 @@ export class GeminiService {
       });
       return speechResponse.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
     } catch (err) {
-      console.warn("TTS Synthesis bypass due to network load.");
+      console.warn("Vocal channel congested, skipping synthesis.");
       return undefined;
     }
   }
