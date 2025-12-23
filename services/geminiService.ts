@@ -16,14 +16,10 @@ const submitLeadFolder: FunctionDeclaration = {
 };
 
 export class GeminiService {
-  /**
-   * Generates voice data with high reliability.
-   */
   async generateVoice(text: string, apiKey: string): Promise<string | undefined> {
     if (!apiKey) return undefined;
     try {
       const ai = new GoogleGenAI({ apiKey });
-      // Using Flash for TTS as it is faster and more reliable on lower tiers
       const speechResponse = await ai.models.generateContent({
         model: "gemini-2.5-flash-preview-tts",
         contents: [{ parts: [{ text: `Say this professionally: ${text}` }] }],
@@ -38,7 +34,7 @@ export class GeminiService {
       });
       return speechResponse.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
     } catch (err) {
-      console.warn("ICT Voice Engine: TTS suppressed to prioritize text stability.");
+      console.warn("ICT Voice Engine: Blocked or Quota Hit.");
       return undefined;
     }
   }
@@ -53,10 +49,8 @@ export class GeminiService {
     leadCaptured?: { firstName: string; phone: string; email: string };
   }> {
     const apiKey = process.env.API_KEY;
-    if (!apiKey) throw new Error("AUTH_REQUIRED");
+    if (!apiKey) throw new Error("API KEY MISSING. Please check Vercel environment variables.");
 
-    // We try Flash first because it has much higher quotas for "Free Tier" users
-    // If billing is not fully synced, the Pro model will 429/Fail.
     const primaryModel = 'gemini-3-flash-preview'; 
 
     try {
@@ -72,7 +66,11 @@ export class GeminiService {
         },
       });
 
-      const text = response.text || "Synchronizing with ICT Intelligence...";
+      if (!response || !response.text) {
+        throw new Error("EMPTY_RESPONSE: The engine connected but didn't return text.");
+      }
+
+      const text = response.text;
       
       let leadCaptured;
       if (response.functionCalls && response.functionCalls.length > 0) {
@@ -90,7 +88,6 @@ export class GeminiService {
         });
       }
 
-      // Voice is non-blocking. If it fails, text still delivers.
       const audioData = await this.generateVoice(text, apiKey);
 
       return { 
@@ -101,6 +98,8 @@ export class GeminiService {
       };
     } catch (error: any) {
       console.error("ICT Primary Logic Fault:", error);
+      if (error.message?.includes("429")) throw new Error("QUOTA_EXCEEDED: Too many requests. Please wait 60 seconds.");
+      if (error.message?.includes("403")) throw new Error("FORBIDDEN: Invalid API Key or Billing Disabled.");
       throw error;
     }
   }
