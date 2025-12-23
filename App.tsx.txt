@@ -5,7 +5,7 @@ import { SUGGESTED_QUESTIONS, INDUSTRY_CONFIG } from './constants';
 import MessageItem from './components/MessageItem';
 import InputArea from './components/InputArea';
 
-const APP_VERSION = "v35.0 Absolute Safety";
+const APP_VERSION = "v37.0 Strategic Advisor";
 
 async function decodeAudioData(
   data: Uint8Array,
@@ -121,7 +121,7 @@ const App: React.FC = () => {
       setMessages([{
         id: 'welcome',
         role: Role.BOT,
-        text: `Greetings. I am the ${config.name}. I provide expert consultation on Managed IT and Professional Training for ICT.\n\nTo align our insights: Are you currently leveraging AI Agents within your own business architecture?`,
+        text: `Greetings. I am the ${config.name}. I provide expert consultation on Managed IT and Professional Training for ICT.\n\nHow can I help you scale or secure your operations today?`,
         timestamp: Date.now(),
       }]);
     }
@@ -199,7 +199,7 @@ const App: React.FC = () => {
               <div className="flex items-center gap-2">
                 <div className={`w-2 h-2 rounded-full ${apiStatus === 'CONNECTED' ? 'bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.5)]' : apiStatus === 'ERROR' ? 'bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.5)]' : 'bg-blue-400'} animate-pulse`}></div>
                 <span className="text-[10px] text-slate-400 font-black uppercase tracking-[0.4em]">
-                  {requiresAuth ? 'Sync Locked' : isSpeaking ? 'Broadcasting' : `Elite ${APP_VERSION.split(' ')[1]}`}
+                  {requiresAuth ? 'Sync Locked' : isSpeaking ? 'Broadcasting' : `Elite ${APP_VERSION.split(' ')[0]}`}
                 </span>
               </div>
             </div>
@@ -219,7 +219,7 @@ const App: React.FC = () => {
           {requiresAuth && !isManuallyUnlocked ? (
             <div className="flex flex-col items-center justify-center min-h-[400px] text-center px-10">
               <div className="w-20 h-20 bg-blue-50 text-blue-600 rounded-[2.5rem] flex items-center justify-center mb-8 shadow-inner">
-                <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2-2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+                <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
               </div>
               <h2 className="text-xl font-black text-slate-900 uppercase tracking-tighter mb-4">Strategic Sync Pending</h2>
               <button onClick={unlockApp} className="w-full py-5 bg-blue-600 text-white font-black rounded-[1.5rem] shadow-xl uppercase tracking-[0.3em] text-[12px]">RE-SYNC PRODUCTION LINK</button>
