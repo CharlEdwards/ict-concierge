@@ -106,7 +106,7 @@ const InputArea: React.FC<InputAreaProps> = ({ onSendMessage, isLoading }) => {
         </div>
       </form>
       <div className="h-6"></div>
-      <p className="text-center text-[9px] md:text-[10px] text-slate-300 font-black uppercase tracking-[0.4em] pointer-events-none">Obsidian Protocol v35.0 Absolute Safety</p>
+      <p className="text-center text-[9px] md:text-[10px] text-slate-300 font-black uppercase tracking-[0.4em] pointer-events-none">Obsidian Protocol v37.0 Strategic Advisor</p>
     </div>
   );
 };
