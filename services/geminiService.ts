@@ -17,9 +17,22 @@ const submitLeadFolder: FunctionDeclaration = {
 
 export class GeminiService {
   private getApiKey(): string | undefined {
-    // Attempt multiple standard locations for Vite/Browser environments
-    // @ts-ignore
-    return process?.env?.API_KEY || process?.env?.VITE_API_KEY || (window as any).process?.env?.API_KEY;
+    try {
+      // 1. Check Vite's standard way (Client-side)
+      // @ts-ignore
+      const viteKey = import.meta.env?.VITE_API_KEY || import.meta.env?.API_KEY;
+      if (viteKey) return viteKey;
+
+      // 2. Fallback to window-safe process check
+      // @ts-ignore
+      const proc = (window as any).process;
+      if (proc && proc.env) {
+        return proc.env.VITE_API_KEY || proc.env.API_KEY;
+      }
+    } catch (e) {
+      console.warn("ICT: Env detection bypassed.");
+    }
+    return undefined;
   }
 
   async generateVoice(text: string, apiKey: string): Promise<string | undefined> {
@@ -40,7 +53,7 @@ export class GeminiService {
       });
       return speechResponse.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
     } catch (err) {
-      console.warn("ICT Voice Engine: Blocked or Key Issue.");
+      console.warn("ICT Voice: Audio generation skipped.");
       return undefined;
     }
   }
@@ -55,7 +68,7 @@ export class GeminiService {
     leadCaptured?: { firstName: string; phone: string; email: string };
   }> {
     const apiKey = this.getApiKey();
-    if (!apiKey) throw new Error("API KEY NOT DETECTED IN BROWSER. Please rename variable to VITE_API_KEY in Vercel.");
+    if (!apiKey) throw new Error("API_KEY_NOT_FOUND: Rename your Vercel variable to VITE_API_KEY.");
 
     const primaryModel = 'gemini-3-flash-preview'; 
 
@@ -73,7 +86,7 @@ export class GeminiService {
       });
 
       if (!response || !response.text) {
-        throw new Error("EMPTY_RESPONSE: The engine connected but returned no data.");
+        throw new Error("EMPTY_BRAIN: Connection successful but no insights returned.");
       }
 
       const text = response.text;
@@ -103,9 +116,9 @@ export class GeminiService {
         leadCaptured
       };
     } catch (error: any) {
-      console.error("ICT AI Logic Failure:", error);
-      if (error.message?.includes("429")) throw new Error("QUOTA_HIT: Too many requests for this key.");
-      if (error.message?.includes("403")) throw new Error("AUTH_DENIED: Your API Key is rejected by Google.");
+      console.error("ICT Logic Error:", error);
+      if (error.message?.includes("429")) throw new Error("QUOTA_LIMIT: Too many requests. Wait 60s.");
+      if (error.message?.includes("403")) throw new Error("KEY_INVALID: Check your API Key in Vercel.");
       throw error;
     }
   }
