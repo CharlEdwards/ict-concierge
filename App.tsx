@@ -5,7 +5,7 @@ import { SUGGESTED_QUESTIONS, INDUSTRY_CONFIG } from './constants';
 import MessageItem from './components/MessageItem';
 import InputArea from './components/InputArea';
 
-const APP_VERSION = "v29.0 Total Restoration";
+const APP_VERSION = "v30.0 Final Correction";
 
 async function decodeAudioData(
   data: Uint8Array,
@@ -62,7 +62,7 @@ const App: React.FC = () => {
         await audioContextRef.current.resume();
       }
     } catch (e) {
-      console.warn("ICT Audio: Hardware wake-up failed.");
+      console.warn("ICT Audio: Force wake failed.");
     }
   }, []);
 
@@ -73,11 +73,11 @@ const App: React.FC = () => {
     osc.connect(gain);
     gain.connect(audioContextRef.current.destination);
     osc.type = 'sine';
-    osc.frequency.setValueAtTime(1000, audioContextRef.current.currentTime);
+    osc.frequency.setValueAtTime(1200, audioContextRef.current.currentTime);
     gain.gain.setValueAtTime(0.2, audioContextRef.current.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.0001, audioContextRef.current.currentTime + 0.2);
+    gain.gain.exponentialRampToValueAtTime(0.0001, audioContextRef.current.currentTime + 0.15);
     osc.start();
-    osc.stop(audioContextRef.current.currentTime + 0.2);
+    osc.stop(audioContextRef.current.currentTime + 0.15);
   }, []);
 
   const playPCM = async (base64Data: string) => {
@@ -104,7 +104,12 @@ const App: React.FC = () => {
   useEffect(() => {
     const verifyAuth = async () => {
       if (isManuallyUnlocked) return;
-      const hasEnvKey = !!process.env.API_KEY;
+      
+      // In Vite, env vars are often shimmed but strictly checked.
+      // @ts-ignore
+      const apiKey = process?.env?.API_KEY || process?.env?.VITE_API_KEY;
+      const hasEnvKey = !!apiKey;
+      
       // @ts-ignore
       if (window.aistudio) {
         // @ts-ignore
@@ -132,19 +137,29 @@ const App: React.FC = () => {
     }
   }, [config.name, messages.length, isManuallyUnlocked]);
 
+  // Auto-scroll when messages change
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTo({
+        top: scrollRef.current.scrollHeight,
+        behavior: 'smooth'
+      });
+    }
+  }, [messages, isLoading, error]);
+
   const handleSendMessage = useCallback(async (text: string) => {
     if (!text.trim() || isLoading) return;
     await initAudio();
     
     setError(null);
     const userMsg: Message = { id: Date.now().toString(), role: Role.USER, text, timestamp: Date.now() };
-    const currentSequence = [...messages, userMsg];
-    setMessages(currentSequence);
+    setMessages(prev => [...prev, userMsg]);
     setIsLoading(true);
+    setApiStatus('IDLE');
 
     try {
-      const apiHistory = currentSequence
-        .filter(m => m.id !== 'welcome') 
+      const apiHistory = [...messages, userMsg]
+        .filter(m => m.id !== 'welcome' && m.role !== Role.SYSTEM) 
         .map((m) => ({
           role: (m.role === Role.BOT ? 'model' : 'user') as 'user' | 'model',
           parts: [{ text: m.text }],
@@ -168,8 +183,15 @@ const App: React.FC = () => {
       }
     } catch (err: any) {
       setApiStatus('ERROR');
-      const errorMsg = err.message || "Establishing secure connection...";
-      setError(`ICT SYSTEM NOTICE: ${errorMsg}. (Ensure API_KEY is set in Vercel)`);
+      const errorText = err.message || "Unknown Connection Fault";
+      
+      const sysMsg: Message = {
+        id: 'err-' + Date.now(),
+        role: Role.SYSTEM,
+        text: `ICT DIAGNOSTIC ALERT: ${errorText}. Please verify that the API_KEY environment variable is set to your Gemini Key in the Vercel Dashboard.`,
+        timestamp: Date.now(),
+      };
+      setMessages(prev => [...prev, sysMsg]);
       setIsLoading(false);
     } finally {
       setIsLoading(false);
@@ -186,6 +208,7 @@ const App: React.FC = () => {
       await window.aistudio.openSelectKey();
     }
     setApiStatus('CONNECTED');
+    playHardwareTestPing();
   };
 
   return (
@@ -205,9 +228,9 @@ const App: React.FC = () => {
             <div>
               <h1 className="font-black text-xl text-slate-900 uppercase tracking-tighter leading-none mb-1">{config.name}</h1>
               <div className="flex items-center gap-2">
-                <div className={`w-2 h-2 rounded-full ${apiStatus === 'CONNECTED' ? 'bg-green-500' : apiStatus === 'ERROR' ? 'bg-red-500' : 'bg-slate-300'} animate-pulse`}></div>
+                <div className={`w-2 h-2 rounded-full ${apiStatus === 'CONNECTED' ? 'bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.5)]' : apiStatus === 'ERROR' ? 'bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.5)]' : 'bg-blue-400'} animate-pulse`}></div>
                 <span className="text-[10px] text-slate-400 font-black uppercase tracking-[0.4em]">
-                  {requiresAuth ? 'Sync Locked' : isSpeaking ? 'Broadcasting' : `Elite ${APP_VERSION.split(' ')[0]}`}
+                  {requiresAuth ? 'Sync Locked' : isSpeaking ? 'Broadcasting' : `Elite v30.0 Correction`}
                 </span>
               </div>
             </div>
@@ -248,6 +271,7 @@ const App: React.FC = () => {
           ) : (
             <>
               {messages.map((msg) => <MessageItem key={msg.id} message={msg} />)}
+              
               {messages.length === 1 && (
                 <div className="grid grid-cols-1 gap-4 pt-4 pb-10">
                   <p className="text-[11px] font-black uppercase tracking-[0.5em] text-slate-300 ml-4 mb-2">Discovery Protocols</p>
@@ -259,15 +283,11 @@ const App: React.FC = () => {
                   ))}
                 </div>
               )}
+
               {isLoading && (
                 <div className="flex items-center gap-5 px-4 pb-10">
                   <div className="w-12 h-12 border-[3px] border-blue-600/10 border-t-blue-600 rounded-full animate-spin"></div>
                   <p className="text-[11px] font-black text-slate-400 uppercase tracking-[0.4em] animate-pulse">Syncing Insights...</p>
-                </div>
-              )}
-              {error && (
-                <div className="mx-4 p-8 bg-slate-50 border border-slate-100 rounded-[2.5rem] text-blue-600 text-[13px] font-black text-center uppercase tracking-[0.2em] shadow-lg leading-relaxed mb-10">
-                  {error}
                 </div>
               )}
             </>
