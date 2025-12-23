@@ -5,7 +5,7 @@ import { SUGGESTED_QUESTIONS, INDUSTRY_CONFIG } from './constants';
 import MessageItem from './components/MessageItem';
 import InputArea from './components/InputArea';
 
-const APP_VERSION = "v38.0 Growth Engine";
+const APP_VERSION = "v40.0 Strategic Partner";
 
 async function decodeAudioData(
   data: Uint8Array,
@@ -121,7 +121,7 @@ const App: React.FC = () => {
       setMessages([{
         id: 'welcome',
         role: Role.BOT,
-        text: `Greetings. I am the ${config.name}. I provide expert consultation on Google Workspace, Remote Desktop connectivity, and Digital Growth strategies.\n\nHow can I help you scale or secure your operations today?`,
+        text: `Greetings. I am the ${config.name}. I provide expert consultation on Google Workspace, Remote Desktop, and Digital Growth (SEO/GEO/Social).\n\nHow can I help you scale your operations today?`,
         timestamp: Date.now(),
       }]);
     }
