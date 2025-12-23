@@ -16,6 +16,12 @@ const submitLeadFolder: FunctionDeclaration = {
 };
 
 export class GeminiService {
+  private getApiKey(): string | undefined {
+    // Attempt multiple standard locations for Vite/Browser environments
+    // @ts-ignore
+    return process?.env?.API_KEY || process?.env?.VITE_API_KEY || (window as any).process?.env?.API_KEY;
+  }
+
   async generateVoice(text: string, apiKey: string): Promise<string | undefined> {
     if (!apiKey) return undefined;
     try {
@@ -34,7 +40,7 @@ export class GeminiService {
       });
       return speechResponse.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
     } catch (err) {
-      console.warn("ICT Voice Engine: Blocked or Quota Hit.");
+      console.warn("ICT Voice Engine: Blocked or Key Issue.");
       return undefined;
     }
   }
@@ -48,8 +54,8 @@ export class GeminiService {
     audioData?: string;
     leadCaptured?: { firstName: string; phone: string; email: string };
   }> {
-    const apiKey = process.env.API_KEY;
-    if (!apiKey) throw new Error("API KEY MISSING. Please check Vercel environment variables.");
+    const apiKey = this.getApiKey();
+    if (!apiKey) throw new Error("API KEY NOT DETECTED IN BROWSER. Please rename variable to VITE_API_KEY in Vercel.");
 
     const primaryModel = 'gemini-3-flash-preview'; 
 
@@ -67,7 +73,7 @@ export class GeminiService {
       });
 
       if (!response || !response.text) {
-        throw new Error("EMPTY_RESPONSE: The engine connected but didn't return text.");
+        throw new Error("EMPTY_RESPONSE: The engine connected but returned no data.");
       }
 
       const text = response.text;
@@ -97,9 +103,9 @@ export class GeminiService {
         leadCaptured
       };
     } catch (error: any) {
-      console.error("ICT Primary Logic Fault:", error);
-      if (error.message?.includes("429")) throw new Error("QUOTA_EXCEEDED: Too many requests. Please wait 60 seconds.");
-      if (error.message?.includes("403")) throw new Error("FORBIDDEN: Invalid API Key or Billing Disabled.");
+      console.error("ICT AI Logic Failure:", error);
+      if (error.message?.includes("429")) throw new Error("QUOTA_HIT: Too many requests for this key.");
+      if (error.message?.includes("403")) throw new Error("AUTH_DENIED: Your API Key is rejected by Google.");
       throw error;
     }
   }
