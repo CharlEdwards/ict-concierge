@@ -5,7 +5,7 @@ import { SUGGESTED_QUESTIONS, INDUSTRY_CONFIG } from './constants';
 import MessageItem from './components/MessageItem';
 import InputArea from './components/InputArea';
 
-const APP_VERSION = "v26.0 Fail-Safe";
+const APP_VERSION = "v27.0 Silence-Breaker";
 
 async function decodeAudioData(
   data: Uint8Array,
@@ -51,7 +51,21 @@ const App: React.FC = () => {
 
   const config = INDUSTRY_CONFIG.options[INDUSTRY_CONFIG.current];
 
-  // Force Resume Audio Context on every user interaction
+  // Hardware Test: Plays a small beep to verify browser audio is "Unlocked"
+  const playHardwareTestPing = useCallback(() => {
+    if (!audioContextRef.current) return;
+    const osc = audioContextRef.current.createOscillator();
+    const gain = audioContextRef.current.createGain();
+    osc.connect(gain);
+    gain.connect(audioContextRef.current.destination);
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(880, audioContextRef.current.currentTime);
+    gain.gain.setValueAtTime(0.1, audioContextRef.current.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.0001, audioContextRef.current.currentTime + 0.1);
+    osc.start();
+    osc.stop(audioContextRef.current.currentTime + 0.1);
+  }, []);
+
   const initAudio = useCallback(async () => {
     try {
       if (!audioContextRef.current) {
@@ -59,9 +73,10 @@ const App: React.FC = () => {
       }
       if (audioContextRef.current.state !== 'running') {
         await audioContextRef.current.resume();
+        console.log("ICT Audio: Context Resumed Successfully.");
       }
     } catch (e) {
-      console.warn("ICT Audio: Resume context bypassed.");
+      console.warn("ICT Audio: Resume skipped.");
     }
   }, []);
 
@@ -112,7 +127,6 @@ const App: React.FC = () => {
     }
   }, [config.name, messages.length]);
 
-  // Voice the welcome message
   useEffect(() => {
     if (!isMinimized && !requiresAuth && isVoiceActive && !welcomeVoicedRef.current && messages.length > 0) {
       const welcome = messages.find(m => m.id === 'welcome');
@@ -159,21 +173,18 @@ const App: React.FC = () => {
         playPCM(response.audioData);
       }
     } catch (err: any) {
-      const msg = err.message?.toLowerCase() || "";
-      if (msg.includes("429") || msg.includes("quota")) {
-        setError("STABILIZING CONNECTION: High volume detected. Attempting failsafe sync...");
-        // Hidden retry with simpler text
-        setTimeout(() => handleSendMessage(text), 2000);
-      } else {
-        setError(`ICT ARCHITECTURE NOTICE: ${err.message || "Establishing secure connection..."}`);
-      }
+      setError(`ICT ARCHITECTURE NOTICE: Establishing connection... Please click VOICE ON to reset channel.`);
+      setIsLoading(false);
     } finally {
       setIsLoading(false);
     }
   }, [messages, isLoading, isVoiceActive, initAudio]);
 
   return (
-    <div className={`fixed bottom-0 right-0 z-[9999] transition-all duration-1000 ease-[cubic-bezier(0.19,1,0.22,1)] flex flex-col items-end p-0 md:p-6 ${isMinimized ? 'w-auto' : 'w-full md:w-[520px] h-[100dvh] md:h-[90vh] max-h-[1100px]'}`}>
+    <div 
+      onClick={initAudio} 
+      className={`fixed bottom-0 right-0 z-[9999] transition-all duration-1000 ease-[cubic-bezier(0.19,1,0.22,1)] flex flex-col items-end p-0 md:p-6 ${isMinimized ? 'w-auto' : 'w-full md:w-[520px] h-[100dvh] md:h-[90vh] max-h-[1100px]'}`}
+    >
       
       <div className={`bg-white shadow-[0_120px_250px_-50px_rgba(0,0,0,0.3)] md:rounded-[5rem] border border-slate-200/50 flex flex-col overflow-hidden transition-all duration-1000 h-full w-full ${isMinimized ? 'scale-75 opacity-0 translate-y-40 pointer-events-none' : 'scale-100 opacity-100 translate-y-0'}`}>
         
@@ -185,18 +196,32 @@ const App: React.FC = () => {
             </div>
             <div>
               <h1 className="font-black text-xl text-slate-900 uppercase tracking-tighter leading-none mb-1">{config.name}</h1>
-              <span className="text-[10px] text-slate-400 font-black uppercase tracking-[0.4em]">
-                {requiresAuth ? 'Sync Required' : isSpeaking ? 'Transmitting Voice' : 'Elite v26.0 Active'}
-              </span>
+              <div className="flex items-center gap-2">
+                {isSpeaking && (
+                   <div className="flex gap-1 items-center h-2">
+                     <div className="w-1 bg-blue-600 h-full animate-[bounce_0.6s_infinite]"></div>
+                     <div className="w-1 bg-blue-600 h-2/3 animate-[bounce_0.8s_infinite]"></div>
+                     <div className="w-1 bg-blue-600 h-full animate-[bounce_0.5s_infinite]"></div>
+                   </div>
+                )}
+                <span className="text-[10px] text-slate-400 font-black uppercase tracking-[0.4em]">
+                  {requiresAuth ? 'Sync Required' : isSpeaking ? 'Broadcasting...' : 'v27.0 Fail-Safe'}
+                </span>
+              </div>
             </div>
           </div>
           <div className="flex items-center gap-3">
             <button 
-              onClick={() => { initAudio(); setIsVoiceActive(!isVoiceActive); }} 
+              onClick={async (e) => { 
+                e.stopPropagation();
+                await initAudio(); 
+                setIsVoiceActive(!isVoiceActive);
+                if (!isVoiceActive) playHardwareTestPing(); 
+              }} 
               className={`px-5 py-3 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] transition-all flex items-center gap-2 ${isVoiceActive ? 'bg-blue-600 text-white shadow-xl shadow-blue-600/30' : 'bg-slate-100 text-slate-400'}`}
             >
               <div className={`w-2 h-2 rounded-full ${isVoiceActive ? 'bg-white animate-pulse' : 'bg-slate-300'}`}></div>
-              {isVoiceActive ? 'VOICE ON' : 'MUTED'}
+              {isVoiceActive ? 'VOICE: ON' : 'VOICE: OFF'}
             </button>
             <button onClick={() => setIsMinimized(true)} className="w-10 h-10 flex items-center justify-center text-slate-300 hover:text-slate-900 transition-all">
               <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 9l-7 7-7-7" /></svg>
