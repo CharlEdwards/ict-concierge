@@ -5,7 +5,7 @@ import { SUGGESTED_QUESTIONS, INDUSTRY_CONFIG } from './constants';
 import MessageItem from './components/MessageItem';
 import InputArea from './components/InputArea';
 
-const APP_VERSION = "v30.0 Final Correction";
+const APP_VERSION = "v31.0 Final Bridge";
 
 async function decodeAudioData(
   data: Uint8Array,
@@ -53,6 +53,12 @@ const App: React.FC = () => {
 
   const config = INDUSTRY_CONFIG.options[INDUSTRY_CONFIG.current];
 
+  // Browser-safe key detection
+  const getSafeKey = useCallback(() => {
+    // @ts-ignore
+    return import.meta.env?.VITE_API_KEY || import.meta.env?.API_KEY || (window as any).process?.env?.VITE_API_KEY;
+  }, []);
+
   const initAudio = useCallback(async () => {
     try {
       if (!audioContextRef.current) {
@@ -62,7 +68,7 @@ const App: React.FC = () => {
         await audioContextRef.current.resume();
       }
     } catch (e) {
-      console.warn("ICT Audio: Force wake failed.");
+      console.warn("ICT Audio: Resume failed.");
     }
   }, []);
 
@@ -73,11 +79,11 @@ const App: React.FC = () => {
     osc.connect(gain);
     gain.connect(audioContextRef.current.destination);
     osc.type = 'sine';
-    osc.frequency.setValueAtTime(1200, audioContextRef.current.currentTime);
-    gain.gain.setValueAtTime(0.2, audioContextRef.current.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.0001, audioContextRef.current.currentTime + 0.15);
+    osc.frequency.setValueAtTime(1400, audioContextRef.current.currentTime);
+    gain.gain.setValueAtTime(0.15, audioContextRef.current.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.0001, audioContextRef.current.currentTime + 0.1);
     osc.start();
-    osc.stop(audioContextRef.current.currentTime + 0.15);
+    osc.stop(audioContextRef.current.currentTime + 0.1);
   }, []);
 
   const playPCM = async (base64Data: string) => {
@@ -105,9 +111,7 @@ const App: React.FC = () => {
     const verifyAuth = async () => {
       if (isManuallyUnlocked) return;
       
-      // In Vite, env vars are often shimmed but strictly checked.
-      // @ts-ignore
-      const apiKey = process?.env?.API_KEY || process?.env?.VITE_API_KEY;
+      const apiKey = getSafeKey();
       const hasEnvKey = !!apiKey;
       
       // @ts-ignore
@@ -135,9 +139,8 @@ const App: React.FC = () => {
         timestamp: Date.now(),
       }]);
     }
-  }, [config.name, messages.length, isManuallyUnlocked]);
+  }, [config.name, messages.length, isManuallyUnlocked, getSafeKey]);
 
-  // Auto-scroll when messages change
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTo({
@@ -145,7 +148,7 @@ const App: React.FC = () => {
         behavior: 'smooth'
       });
     }
-  }, [messages, isLoading, error]);
+  }, [messages, isLoading]);
 
   const handleSendMessage = useCallback(async (text: string) => {
     if (!text.trim() || isLoading) return;
@@ -155,7 +158,6 @@ const App: React.FC = () => {
     const userMsg: Message = { id: Date.now().toString(), role: Role.USER, text, timestamp: Date.now() };
     setMessages(prev => [...prev, userMsg]);
     setIsLoading(true);
-    setApiStatus('IDLE');
 
     try {
       const apiHistory = [...messages, userMsg]
@@ -183,12 +185,12 @@ const App: React.FC = () => {
       }
     } catch (err: any) {
       setApiStatus('ERROR');
-      const errorText = err.message || "Unknown Connection Fault";
+      const errorText = err.message || "Establishing secure connection...";
       
       const sysMsg: Message = {
         id: 'err-' + Date.now(),
         role: Role.SYSTEM,
-        text: `ICT DIAGNOSTIC ALERT: ${errorText}. Please verify that the API_KEY environment variable is set to your Gemini Key in the Vercel Dashboard.`,
+        text: `ICT SYSTEM NOTICE: ${errorText}. Please ensure your Vercel Environment Variable is named VITE_API_KEY.`,
         timestamp: Date.now(),
       };
       setMessages(prev => [...prev, sysMsg]);
@@ -213,7 +215,6 @@ const App: React.FC = () => {
 
   return (
     <div 
-      onClick={initAudio}
       className={`fixed bottom-0 right-0 z-[9999] transition-all duration-1000 ease-[cubic-bezier(0.19,1,0.22,1)] flex flex-col items-end p-0 md:p-6 ${isMinimized ? 'w-auto' : 'w-full md:w-[520px] h-[100dvh] md:h-[90vh] max-h-[1100px]'}`}
     >
       
@@ -230,7 +231,7 @@ const App: React.FC = () => {
               <div className="flex items-center gap-2">
                 <div className={`w-2 h-2 rounded-full ${apiStatus === 'CONNECTED' ? 'bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.5)]' : apiStatus === 'ERROR' ? 'bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.5)]' : 'bg-blue-400'} animate-pulse`}></div>
                 <span className="text-[10px] text-slate-400 font-black uppercase tracking-[0.4em]">
-                  {requiresAuth ? 'Sync Locked' : isSpeaking ? 'Broadcasting' : `Elite v30.0 Correction`}
+                  {requiresAuth ? 'Sync Locked' : isSpeaking ? 'Broadcasting' : `Elite ${APP_VERSION.split(' ')[0]}`}
                 </span>
               </div>
             </div>
