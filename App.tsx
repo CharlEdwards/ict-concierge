@@ -5,7 +5,7 @@ import { SUGGESTED_QUESTIONS, INDUSTRY_CONFIG } from './constants';
 import MessageItem from './components/MessageItem';
 import InputArea from './components/InputArea';
 
-const APP_VERSION = "v28.0 Final Unlocking";
+const APP_VERSION = "v29.0 Total Restoration";
 
 async function decodeAudioData(
   data: Uint8Array,
@@ -45,6 +45,7 @@ const App: React.FC = () => {
   const [requiresAuth, setRequiresAuth] = useState(false);
   const [isManuallyUnlocked, setIsManuallyUnlocked] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
+  const [apiStatus, setApiStatus] = useState<'IDLE' | 'CONNECTED' | 'ERROR'>('IDLE');
   
   const audioContextRef = useRef<AudioContext | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -61,7 +62,7 @@ const App: React.FC = () => {
         await audioContextRef.current.resume();
       }
     } catch (e) {
-      console.warn("ICT Audio: Context wake-up failed.");
+      console.warn("ICT Audio: Hardware wake-up failed.");
     }
   }, []);
 
@@ -108,9 +109,13 @@ const App: React.FC = () => {
       if (window.aistudio) {
         // @ts-ignore
         const hasStudioKey = await window.aistudio.hasSelectedApiKey();
-        setRequiresAuth(!hasStudioKey && !hasEnvKey);
+        const needsAuth = !hasStudioKey && !hasEnvKey;
+        setRequiresAuth(needsAuth);
+        if (!needsAuth) setApiStatus('CONNECTED');
       } else {
-        setRequiresAuth(!hasEnvKey);
+        const needsAuth = !hasEnvKey;
+        setRequiresAuth(needsAuth);
+        if (!needsAuth) setApiStatus('CONNECTED');
       }
     };
     
@@ -126,19 +131,6 @@ const App: React.FC = () => {
       }]);
     }
   }, [config.name, messages.length, isManuallyUnlocked]);
-
-  useEffect(() => {
-    if (!isMinimized && !requiresAuth && isVoiceActive && !welcomeVoicedRef.current && messages.length > 0) {
-      const welcome = messages.find(m => m.id === 'welcome');
-      const key = process.env.API_KEY;
-      if (welcome && key) {
-        welcomeVoicedRef.current = true;
-        geminiService.generateVoice(welcome.text, key)
-          .then(audio => audio && playPCM(audio))
-          .catch(() => {});
-      }
-    }
-  }, [isMinimized, requiresAuth, isVoiceActive, messages, initAudio]);
 
   const handleSendMessage = useCallback(async (text: string) => {
     if (!text.trim() || isLoading) return;
@@ -159,6 +151,8 @@ const App: React.FC = () => {
         }));
       
       const response = await geminiService.sendMessage(apiHistory, text);
+      setApiStatus('CONNECTED');
+      
       const botMsg: Message = {
         id: (Date.now() + 1).toString(),
         role: Role.BOT,
@@ -173,7 +167,9 @@ const App: React.FC = () => {
         playPCM(response.audioData);
       }
     } catch (err: any) {
-      setError(`ICT SYSTEM NOTICE: Synchronizing channel... Try again in 2 seconds.`);
+      setApiStatus('ERROR');
+      const errorMsg = err.message || "Establishing secure connection...";
+      setError(`ICT SYSTEM NOTICE: ${errorMsg}. (Ensure API_KEY is set in Vercel)`);
       setIsLoading(false);
     } finally {
       setIsLoading(false);
@@ -185,7 +181,11 @@ const App: React.FC = () => {
     setRequiresAuth(false);
     await initAudio();
     // @ts-ignore
-    if (window.aistudio) window.aistudio.openSelectKey();
+    if (window.aistudio) {
+      // @ts-ignore
+      await window.aistudio.openSelectKey();
+    }
+    setApiStatus('CONNECTED');
   };
 
   return (
@@ -205,15 +205,9 @@ const App: React.FC = () => {
             <div>
               <h1 className="font-black text-xl text-slate-900 uppercase tracking-tighter leading-none mb-1">{config.name}</h1>
               <div className="flex items-center gap-2">
-                {isSpeaking ? (
-                   <div className="flex gap-1 items-center h-2">
-                     <div className="w-1 bg-blue-600 h-full animate-[bounce_0.6s_infinite]"></div>
-                     <div className="w-1 bg-blue-600 h-2/3 animate-[bounce_0.8s_infinite]"></div>
-                     <div className="w-1 bg-blue-600 h-full animate-[bounce_0.5s_infinite]"></div>
-                   </div>
-                ) : <div className="w-1 h-1 bg-green-500 rounded-full animate-pulse"></div>}
+                <div className={`w-2 h-2 rounded-full ${apiStatus === 'CONNECTED' ? 'bg-green-500' : apiStatus === 'ERROR' ? 'bg-red-500' : 'bg-slate-300'} animate-pulse`}></div>
                 <span className="text-[10px] text-slate-400 font-black uppercase tracking-[0.4em]">
-                  {requiresAuth ? 'Sync Locked' : isSpeaking ? 'Broadcasting' : 'Elite v28.0 Active'}
+                  {requiresAuth ? 'Sync Locked' : isSpeaking ? 'Broadcasting' : `Elite ${APP_VERSION.split(' ')[0]}`}
                 </span>
               </div>
             </div>
