@@ -5,7 +5,7 @@ import { SUGGESTED_QUESTIONS, INDUSTRY_CONFIG } from './constants';
 import MessageItem from './components/MessageItem';
 import InputArea from './components/InputArea';
 
-const APP_VERSION = "v27.0 Silence-Breaker";
+const APP_VERSION = "v28.0 Final Unlocking";
 
 async function decodeAudioData(
   data: Uint8Array,
@@ -43,6 +43,7 @@ const App: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [isVoiceActive, setIsVoiceActive] = useState(true); 
   const [requiresAuth, setRequiresAuth] = useState(false);
+  const [isManuallyUnlocked, setIsManuallyUnlocked] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
   
   const audioContextRef = useRef<AudioContext | null>(null);
@@ -51,21 +52,6 @@ const App: React.FC = () => {
 
   const config = INDUSTRY_CONFIG.options[INDUSTRY_CONFIG.current];
 
-  // Hardware Test: Plays a small beep to verify browser audio is "Unlocked"
-  const playHardwareTestPing = useCallback(() => {
-    if (!audioContextRef.current) return;
-    const osc = audioContextRef.current.createOscillator();
-    const gain = audioContextRef.current.createGain();
-    osc.connect(gain);
-    gain.connect(audioContextRef.current.destination);
-    osc.type = 'sine';
-    osc.frequency.setValueAtTime(880, audioContextRef.current.currentTime);
-    gain.gain.setValueAtTime(0.1, audioContextRef.current.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.0001, audioContextRef.current.currentTime + 0.1);
-    osc.start();
-    osc.stop(audioContextRef.current.currentTime + 0.1);
-  }, []);
-
   const initAudio = useCallback(async () => {
     try {
       if (!audioContextRef.current) {
@@ -73,11 +59,24 @@ const App: React.FC = () => {
       }
       if (audioContextRef.current.state !== 'running') {
         await audioContextRef.current.resume();
-        console.log("ICT Audio: Context Resumed Successfully.");
       }
     } catch (e) {
-      console.warn("ICT Audio: Resume skipped.");
+      console.warn("ICT Audio: Context wake-up failed.");
     }
+  }, []);
+
+  const playHardwareTestPing = useCallback(() => {
+    if (!audioContextRef.current) return;
+    const osc = audioContextRef.current.createOscillator();
+    const gain = audioContextRef.current.createGain();
+    osc.connect(gain);
+    gain.connect(audioContextRef.current.destination);
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(1000, audioContextRef.current.currentTime);
+    gain.gain.setValueAtTime(0.2, audioContextRef.current.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.0001, audioContextRef.current.currentTime + 0.2);
+    osc.start();
+    osc.stop(audioContextRef.current.currentTime + 0.2);
   }, []);
 
   const playPCM = async (base64Data: string) => {
@@ -96,13 +95,14 @@ const App: React.FC = () => {
       setIsSpeaking(true);
       source.start();
     } catch (e) {
-      console.error("ICT Voice Playback Error:", e);
+      console.error("ICT Voice Error:", e);
       setIsSpeaking(false);
     }
   };
 
   useEffect(() => {
     const verifyAuth = async () => {
+      if (isManuallyUnlocked) return;
       const hasEnvKey = !!process.env.API_KEY;
       // @ts-ignore
       if (window.aistudio) {
@@ -125,7 +125,7 @@ const App: React.FC = () => {
         timestamp: Date.now(),
       }]);
     }
-  }, [config.name, messages.length]);
+  }, [config.name, messages.length, isManuallyUnlocked]);
 
   useEffect(() => {
     if (!isMinimized && !requiresAuth && isVoiceActive && !welcomeVoicedRef.current && messages.length > 0) {
@@ -173,16 +173,24 @@ const App: React.FC = () => {
         playPCM(response.audioData);
       }
     } catch (err: any) {
-      setError(`ICT ARCHITECTURE NOTICE: Establishing connection... Please click VOICE ON to reset channel.`);
+      setError(`ICT SYSTEM NOTICE: Synchronizing channel... Try again in 2 seconds.`);
       setIsLoading(false);
     } finally {
       setIsLoading(false);
     }
   }, [messages, isLoading, isVoiceActive, initAudio]);
 
+  const unlockApp = async () => {
+    setIsManuallyUnlocked(true);
+    setRequiresAuth(false);
+    await initAudio();
+    // @ts-ignore
+    if (window.aistudio) window.aistudio.openSelectKey();
+  };
+
   return (
     <div 
-      onClick={initAudio} 
+      onClick={initAudio}
       className={`fixed bottom-0 right-0 z-[9999] transition-all duration-1000 ease-[cubic-bezier(0.19,1,0.22,1)] flex flex-col items-end p-0 md:p-6 ${isMinimized ? 'w-auto' : 'w-full md:w-[520px] h-[100dvh] md:h-[90vh] max-h-[1100px]'}`}
     >
       
@@ -197,15 +205,15 @@ const App: React.FC = () => {
             <div>
               <h1 className="font-black text-xl text-slate-900 uppercase tracking-tighter leading-none mb-1">{config.name}</h1>
               <div className="flex items-center gap-2">
-                {isSpeaking && (
+                {isSpeaking ? (
                    <div className="flex gap-1 items-center h-2">
                      <div className="w-1 bg-blue-600 h-full animate-[bounce_0.6s_infinite]"></div>
                      <div className="w-1 bg-blue-600 h-2/3 animate-[bounce_0.8s_infinite]"></div>
                      <div className="w-1 bg-blue-600 h-full animate-[bounce_0.5s_infinite]"></div>
                    </div>
-                )}
+                ) : <div className="w-1 h-1 bg-green-500 rounded-full animate-pulse"></div>}
                 <span className="text-[10px] text-slate-400 font-black uppercase tracking-[0.4em]">
-                  {requiresAuth ? 'Sync Required' : isSpeaking ? 'Broadcasting...' : 'v27.0 Fail-Safe'}
+                  {requiresAuth ? 'Sync Locked' : isSpeaking ? 'Broadcasting' : 'Elite v28.0 Active'}
                 </span>
               </div>
             </div>
@@ -230,18 +238,14 @@ const App: React.FC = () => {
         </header>
 
         <main ref={scrollRef} className="flex-1 overflow-y-auto px-10 py-10 space-y-10 bg-[#fefeff]">
-          {requiresAuth ? (
+          {requiresAuth && !isManuallyUnlocked ? (
             <div className="flex flex-col items-center justify-center min-h-[400px] text-center px-10">
               <div className="w-20 h-20 bg-blue-50 text-blue-600 rounded-[2.5rem] flex items-center justify-center mb-8 shadow-inner">
                 <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
               </div>
               <h2 className="text-xl font-black text-slate-900 uppercase tracking-tighter mb-4">Strategic Sync Pending</h2>
               <button 
-                onClick={async () => {
-                  // @ts-ignore
-                  if (window.aistudio) await window.aistudio.openSelectKey();
-                  setRequiresAuth(false);
-                }} 
+                onClick={unlockApp} 
                 className="w-full py-5 bg-blue-600 text-white font-black rounded-[1.5rem] shadow-xl uppercase tracking-[0.3em] text-[12px]"
               >
                 RE-SYNC PRODUCTION LINK
@@ -276,7 +280,7 @@ const App: React.FC = () => {
           )}
         </main>
         
-        {!requiresAuth && (
+        {(!requiresAuth || isManuallyUnlocked) && (
           <div className="px-12 pb-14 pt-8 bg-white/60 backdrop-blur-3xl border-t border-slate-50 shrink-0">
             <InputArea onSendMessage={handleSendMessage} isLoading={isLoading} />
           </div>
