@@ -34,11 +34,17 @@ export class GeminiService {
       const ai = new GoogleGenAI({ apiKey });
       const speechResponse = await ai.models.generateContent({
         model: "gemini-2.5-flash-preview-tts",
-        contents: [{ parts: [{ text: `Say this professionally: ${text}` }] }],
+        contents: [{ 
+          parts: [{ 
+            text: `Speak this text in a quiet, soft-spoken, pleasant, and highly articulated American female voice with a subtle, playful hint of mischief: ${text}` 
+          }] 
+        }],
         config: {
           responseModalities: [Modality.AUDIO],
           speechConfig: {
-            voiceConfig: { prebuiltVoiceConfig: { voiceName: 'Kore' } },
+            voiceConfig: { 
+              prebuiltVoiceConfig: { voiceName: 'Zephyr' } 
+            },
           },
         },
       });
@@ -68,14 +74,13 @@ export class GeminiService {
         config: {
           systemInstruction: getSystemInstruction() + "\nALWAYS confirm you have received information with words.",
           tools: [{ functionDeclarations: [submitLeadFolder] }],
-          temperature: 0.1,
+          temperature: 0.2, // Slightly increased temperature to allow for the requested mischief/personality
         },
       });
 
       let extractedText = "";
       let leadCaptured = null;
 
-      // v36 Hardened Iteration
       const parts = response.candidates?.[0]?.content?.parts || [];
       for (const part of parts) {
         if (part.text) {
@@ -86,12 +91,10 @@ export class GeminiService {
         }
       }
 
-      // v36 Automatic Vocal Trigger: If lead is found but AI is silent
       if (!extractedText.trim() && leadCaptured) {
-        extractedText = "Strategic protocol confirmed. I have successfully established your profile in our growth database. Our team will coordinate a formal consultation shortly.";
+        extractedText = "Strategic protocol confirmed. I've successfully established your profile in our growth database. Our team will coordinate a formal consultation shortly.";
       }
 
-      // v36 Ultimate Silence Safeguard
       if (!extractedText.trim()) {
         extractedText = "I have processed your request and synchronized our growth logs. Please provide further context so I can properly align our resources.";
       }
