@@ -36,7 +36,7 @@ export class GeminiService {
         model: "gemini-2.5-flash-preview-tts",
         contents: [{ 
           parts: [{ 
-            text: `Speak this text in a quiet, soft-spoken, pleasant, and highly articulated American female voice with a subtle, playful hint of mischief: ${text}` 
+            text: `Speak this text in a smart, articulate, and exceptionally pleasant American female voice. Talk at a slightly brisk, engaging conversational pace. Sound like someone everyone would enjoy talking to: ${text}` 
           }] 
         }],
         config: {
@@ -74,7 +74,7 @@ export class GeminiService {
         config: {
           systemInstruction: getSystemInstruction() + "\nALWAYS confirm you have received information with words.",
           tools: [{ functionDeclarations: [submitLeadFolder] }],
-          temperature: 0.2, // Slightly increased temperature to allow for the requested mischief/personality
+          temperature: 0.2,
         },
       });
 
@@ -92,11 +92,11 @@ export class GeminiService {
       }
 
       if (!extractedText.trim() && leadCaptured) {
-        extractedText = "Strategic protocol confirmed. I've successfully established your profile in our growth database. Our team will coordinate a formal consultation shortly.";
+        extractedText = "Perfect, I've got that down! I've successfully added your details to our growth list, and a specialist will reach out to you shortly to get things moving.";
       }
 
       if (!extractedText.trim()) {
-        extractedText = "I have processed your request and synchronized our growth logs. Please provide further context so I can properly align our resources.";
+        extractedText = "I've processed that for you. Could you give me a bit more context so I can really nail down the right solution?";
       }
       
       const sources: { uri: string; title: string }[] = [];
