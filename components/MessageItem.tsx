@@ -8,7 +8,19 @@ interface MessageItemProps {
 
 const MessageItem: React.FC<MessageItemProps> = ({ message }) => {
   const isBot = message.role === Role.BOT;
+  const isSystem = message.role === Role.SYSTEM;
   const config = INDUSTRY_CONFIG.options[INDUSTRY_CONFIG.current] || INDUSTRY_CONFIG.options.TECHNOLOGY;
+
+  if (isSystem) {
+    return (
+      <div className="w-full flex justify-center px-4 animate-in fade-in slide-in-from-top-2 duration-700">
+        <div className="bg-slate-50 border border-slate-100 px-8 py-6 rounded-[2rem] max-w-full text-center shadow-inner">
+          <p className="text-[10px] font-black uppercase tracking-[0.4em] text-red-500 mb-2">Architectural Logic Alert</p>
+          <p className="text-[13px] text-slate-500 font-bold leading-relaxed uppercase tracking-[0.05em]">{message.text}</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={`flex w-full ${isBot ? 'justify-start' : 'justify-end'} animate-in fade-in slide-in-from-bottom-4 duration-1000 ease-[cubic-bezier(0.19,1,0.22,1)]`}>
