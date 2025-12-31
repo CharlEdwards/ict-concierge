@@ -5,7 +5,7 @@ import { SUGGESTED_QUESTIONS, INDUSTRY_CONFIG } from './constants';
 import MessageItem from './components/MessageItem';
 import InputArea from './components/InputArea';
 
-const APP_VERSION = "v45.0 Strategic Conversationalist";
+const APP_VERSION = "v46.0 Centralized Concierge";
 const WELCOME_TEXT = "Hi there! I'm your ICT partner. I'd love to help you navigate Google Workspace, secure your remote setup, or help you grow with some sharp SEO and GEO strategies. What can we tackle together today?";
 
 async function decodeAudioData(
@@ -205,14 +205,16 @@ const App: React.FC = () => {
     <div className={`fixed bottom-0 right-0 z-[9999] transition-all duration-1000 ease-[cubic-bezier(0.19,1,0.22,1)] flex flex-col items-end p-0 md:p-6 ${isMinimized ? 'w-auto' : 'w-full md:w-[520px] h-[100dvh] md:h-[90vh] max-h-[1100px]'}`}>
       <div className={`bg-white shadow-[0_120px_250px_-50px_rgba(0,0,0,0.3)] md:rounded-[5rem] border border-slate-200/50 flex flex-col overflow-hidden transition-all duration-1000 h-full w-full ${isMinimized ? 'scale-75 opacity-0 translate-y-40 pointer-events-none' : 'scale-100 opacity-100 translate-y-0'}`}>
         <header className="px-6 py-8 md:px-10 md:py-10 flex items-center gap-4 border-b border-slate-50 bg-white/40 backdrop-blur-3xl shrink-0">
+          {/* Avatar Component */}
           <div className="w-12 h-12 md:w-14 md:h-14 bg-blue-600 rounded-[1.4rem] md:rounded-[1.8rem] flex-shrink-0 flex items-center justify-center text-white font-black text-xl md:text-2xl shadow-lg relative">
             {isSpeaking && <div className="absolute -inset-3 bg-blue-600/20 animate-ping rounded-full"></div>}
             {config.shortName[0]}
           </div>
 
-          <div className="flex-1 min-w-0">
+          {/* Centralized Title and Subtitle */}
+          <div className="flex-1 min-w-0 text-center">
             <h1 className="font-black text-base md:text-xl text-slate-900 uppercase tracking-tighter leading-none mb-1 truncate">{config.name}</h1>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center justify-center gap-2">
               <div className={`w-1.5 h-1.5 md:w-2 md:h-2 rounded-full ${apiStatus === 'CONNECTED' ? 'bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.5)]' : apiStatus === 'ERROR' ? 'bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.5)]' : 'bg-blue-400'} animate-pulse`}></div>
               <span className="text-[9px] md:text-[10px] text-slate-400 font-black uppercase tracking-[0.3em] whitespace-nowrap overflow-hidden text-ellipsis">
                 {requiresAuth ? 'Sync Locked' : isSpeaking ? 'Broadcasting' : `Simply Smart ${APP_VERSION.split(' ')[0]}`}
@@ -220,6 +222,7 @@ const App: React.FC = () => {
             </div>
           </div>
 
+          {/* Controls Component */}
           <div className="flex items-center gap-2">
             <button 
               onClick={async (e) => { e.stopPropagation(); await initAudio(); setIsVoiceActive(!isVoiceActive); if (!isVoiceActive) playHardwareTestPing(); }} 
