@@ -5,7 +5,7 @@ import { SUGGESTED_QUESTIONS, INDUSTRY_CONFIG } from './constants';
 import MessageItem from './components/MessageItem';
 import InputArea from './components/InputArea';
 
-const APP_VERSION = "v41.0 Trusted Partner";
+const APP_VERSION = "v42.0 Simply Smart Partner";
 const WELCOME_TEXT = "Hello! I'm your ICT partner. I'm here to help you navigate Google Workspace, secure your remote office, or amplify your reach with SEO and GEO strategies. What's on your mind today?";
 
 async function decodeAudioData(
@@ -215,7 +215,7 @@ const App: React.FC = () => {
               <div className="flex items-center gap-2">
                 <div className={`w-2 h-2 rounded-full ${apiStatus === 'CONNECTED' ? 'bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.5)]' : apiStatus === 'ERROR' ? 'bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.5)]' : 'bg-blue-400'} animate-pulse`}></div>
                 <span className="text-[10px] text-slate-400 font-black uppercase tracking-[0.4em]">
-                  {requiresAuth ? 'Sync Locked' : isSpeaking ? 'Broadcasting' : `Sophisticated ${APP_VERSION.split(' ')[0]}`}
+                  {requiresAuth ? 'Sync Locked' : isSpeaking ? 'Broadcasting' : `Simply Smart ${APP_VERSION.split(' ')[0]}`}
                 </span>
               </div>
             </div>
@@ -275,7 +275,7 @@ const App: React.FC = () => {
         <div className="flex items-center gap-6 bg-blue-600 pl-10 pr-8 py-7 rounded-[4rem] shadow-[0_60px_120px_-20px_rgba(37,99,235,0.4)] border border-white/20 hover:scale-105 active:scale-95 transition-all">
           <div className="flex flex-col">
             <span className="text-white text-[15px] font-black uppercase tracking-[0.2em] leading-tight mb-1">{config.name}</span>
-            <span className="text-blue-100 text-[10px] font-black uppercase tracking-[0.4em] opacity-60">Trusted Partner</span>
+            <span className="text-blue-100 text-[10px] font-black uppercase tracking-[0.4em] opacity-60">Simply Smart Partner</span>
           </div>
           <div className="w-14 h-14 bg-white/20 rounded-[1.8rem] flex items-center justify-center text-white">
             <svg className="w-9 h-9" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M8 10h.01M12 10h.01M16 10h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
