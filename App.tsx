@@ -5,7 +5,7 @@ import { SUGGESTED_QUESTIONS, INDUSTRY_CONFIG } from './constants';
 import MessageItem from './components/MessageItem';
 import InputArea from './components/InputArea';
 
-const APP_VERSION = "v42.0 Simply Smart Partner";
+const APP_VERSION = "v43.0 Simply Smart Partner";
 const WELCOME_TEXT = "Hello! I'm your ICT partner. I'm here to help you navigate Google Workspace, secure your remote office, or amplify your reach with SEO and GEO strategies. What's on your mind today?";
 
 async function decodeAudioData(
@@ -204,34 +204,40 @@ const App: React.FC = () => {
   return (
     <div className={`fixed bottom-0 right-0 z-[9999] transition-all duration-1000 ease-[cubic-bezier(0.19,1,0.22,1)] flex flex-col items-end p-0 md:p-6 ${isMinimized ? 'w-auto' : 'w-full md:w-[520px] h-[100dvh] md:h-[90vh] max-h-[1100px]'}`}>
       <div className={`bg-white shadow-[0_120px_250px_-50px_rgba(0,0,0,0.3)] md:rounded-[5rem] border border-slate-200/50 flex flex-col overflow-hidden transition-all duration-1000 h-full w-full ${isMinimized ? 'scale-75 opacity-0 translate-y-40 pointer-events-none' : 'scale-100 opacity-100 translate-y-0'}`}>
-        <header className="px-10 py-10 flex items-center justify-between border-b border-slate-50 bg-white/40 backdrop-blur-3xl shrink-0">
-          <div className="flex items-center gap-5">
-            <div className="w-14 h-14 bg-blue-600 rounded-[1.8rem] flex items-center justify-center text-white font-black text-2xl shadow-lg relative">
-              {isSpeaking && <div className="absolute -inset-3 bg-blue-600/20 animate-ping rounded-full"></div>}
-              {config.shortName[0]}
-            </div>
-            <div>
-              <h1 className="font-black text-xl text-slate-900 uppercase tracking-tighter leading-none mb-1">{config.name}</h1>
-              <div className="flex items-center gap-2">
-                <div className={`w-2 h-2 rounded-full ${apiStatus === 'CONNECTED' ? 'bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.5)]' : apiStatus === 'ERROR' ? 'bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.5)]' : 'bg-blue-400'} animate-pulse`}></div>
-                <span className="text-[10px] text-slate-400 font-black uppercase tracking-[0.4em]">
-                  {requiresAuth ? 'Sync Locked' : isSpeaking ? 'Broadcasting' : `Simply Smart ${APP_VERSION.split(' ')[0]}`}
-                </span>
-              </div>
+        <header className="px-6 py-8 md:px-10 md:py-10 flex items-center gap-4 border-b border-slate-50 bg-white/40 backdrop-blur-3xl shrink-0">
+          {/* First Blue Object: Avatar */}
+          <div className="w-12 h-12 md:w-14 md:h-14 bg-blue-600 rounded-[1.4rem] md:rounded-[1.8rem] flex-shrink-0 flex items-center justify-center text-white font-black text-xl md:text-2xl shadow-lg relative">
+            {isSpeaking && <div className="absolute -inset-3 bg-blue-600/20 animate-ping rounded-full"></div>}
+            {config.shortName[0]}
+          </div>
+
+          {/* Centered Content: Fits between the two blue objects */}
+          <div className="flex-1 min-w-0">
+            <h1 className="font-black text-base md:text-xl text-slate-900 uppercase tracking-tighter leading-none mb-1 truncate">{config.name}</h1>
+            <div className="flex items-center gap-2">
+              <div className={`w-1.5 h-1.5 md:w-2 md:h-2 rounded-full ${apiStatus === 'CONNECTED' ? 'bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.5)]' : apiStatus === 'ERROR' ? 'bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.5)]' : 'bg-blue-400'} animate-pulse`}></div>
+              <span className="text-[9px] md:text-[10px] text-slate-400 font-black uppercase tracking-[0.3em] whitespace-nowrap overflow-hidden text-ellipsis">
+                {requiresAuth ? 'Sync Locked' : isSpeaking ? 'Broadcasting' : `Simply Smart ${APP_VERSION.split(' ')[0]}`}
+              </span>
             </div>
           </div>
-          <div className="flex items-center gap-3">
-            <button onClick={async (e) => { e.stopPropagation(); await initAudio(); setIsVoiceActive(!isVoiceActive); if (!isVoiceActive) playHardwareTestPing(); }} className={`px-5 py-3 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] transition-all flex items-center gap-2 ${isVoiceActive ? 'bg-blue-600 text-white shadow-xl shadow-blue-600/30' : 'bg-slate-100 text-slate-400'}`}>
-              <div className={`w-2 h-2 rounded-full ${isVoiceActive ? 'bg-white animate-pulse' : 'bg-slate-300'}`}></div>
-              {isVoiceActive ? 'VOICE: ON' : 'VOICE: OFF'}
+
+          {/* Second Blue Object Group: Ultra-compact Voice Button & Close */}
+          <div className="flex items-center gap-2">
+            <button 
+              onClick={async (e) => { e.stopPropagation(); await initAudio(); setIsVoiceActive(!isVoiceActive); if (!isVoiceActive) playHardwareTestPing(); }} 
+              className={`w-12 h-10 md:w-14 md:h-12 rounded-xl text-[9px] font-black uppercase tracking-[0.1em] transition-all flex flex-col items-center justify-center border-2 ${isVoiceActive ? 'bg-blue-600 border-blue-600 text-white shadow-xl shadow-blue-600/30' : 'bg-slate-50 border-slate-100 text-slate-400'}`}
+            >
+              <div className={`w-1.5 h-1.5 rounded-full mb-1 ${isVoiceActive ? 'bg-white animate-pulse' : 'bg-slate-300'}`}></div>
+              {isVoiceActive ? 'ON' : 'OFF'}
             </button>
-            <button onClick={() => setIsMinimized(true)} className="w-10 h-10 flex items-center justify-center text-slate-300 hover:text-slate-900 transition-all">
-              <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 9l-7 7-7-7" /></svg>
+            <button onClick={() => setIsMinimized(true)} className="w-8 h-8 md:w-10 md:h-10 flex items-center justify-center text-slate-300 hover:text-slate-900 transition-all">
+              <svg className="w-6 h-6 md:w-8 md:h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 9l-7 7-7-7" /></svg>
             </button>
           </div>
         </header>
 
-        <main ref={scrollRef} className="flex-1 overflow-y-auto px-10 py-10 space-y-10 bg-[#fefeff]">
+        <main ref={scrollRef} className="flex-1 overflow-y-auto px-6 md:px-10 py-8 md:py-10 space-y-10 bg-[#fefeff]">
           {requiresAuth && !isManuallyUnlocked ? (
             <div className="flex flex-col items-center justify-center min-h-[400px] text-center px-10">
               <div className="w-20 h-20 bg-blue-50 text-blue-600 rounded-[2.5rem] flex items-center justify-center mb-8 shadow-inner">
@@ -265,7 +271,7 @@ const App: React.FC = () => {
         </main>
         
         {(!requiresAuth || isManuallyUnlocked) && (
-          <div className="px-12 pb-14 pt-8 bg-white/60 backdrop-blur-3xl border-t border-slate-50 shrink-0">
+          <div className="px-8 md:px-12 pb-10 md:pb-14 pt-6 md:pt-8 bg-white/60 backdrop-blur-3xl border-t border-slate-50 shrink-0">
             <InputArea onSendMessage={handleSendMessage} isLoading={isLoading} />
           </div>
         )}
