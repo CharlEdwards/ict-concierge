@@ -58,7 +58,7 @@ export class GeminiService {
     leadCaptured?: any;
   }> {
     const apiKey = this.getApiKey();
-    if (!apiKey) throw new Error("API_KEY_NOT_FOUND: Check Vercel Environment Variables.");
+    if (!apiKey) throw new Error("API_KEY_NOT_FOUND: Ensure VITE_API_KEY is set in your host environment.");
 
     try {
       const ai = new GoogleGenAI({ apiKey });
@@ -66,16 +66,16 @@ export class GeminiService {
         model: 'gemini-3-flash-preview',
         contents: history,
         config: {
-          systemInstruction: getSystemInstruction() + "\nALWAYS confirm you have received information.",
+          systemInstruction: getSystemInstruction() + "\nALWAYS confirm you have received information with words.",
           tools: [{ functionDeclarations: [submitLeadFolder] }],
-          temperature: 0.1, // Lower temperature for more reliable tool calls
+          temperature: 0.1,
         },
       });
 
       let extractedText = "";
       let leadCaptured = null;
 
-      // v35 Manual Parsing: Safe iteration of parts to prevent getter crashes
+      // v36 Hardened Iteration
       const parts = response.candidates?.[0]?.content?.parts || [];
       for (const part of parts) {
         if (part.text) {
@@ -86,14 +86,14 @@ export class GeminiService {
         }
       }
 
-      // v35 Fallback: If AI captured a lead but returned 0 text
+      // v36 Automatic Vocal Trigger: If lead is found but AI is silent
       if (!extractedText.trim() && leadCaptured) {
-        extractedText = "Strategic protocol initiated. I have successfully logged your contact information. Our specialized growth team will reach out shortly to finalize your business transformation.";
+        extractedText = "Strategic protocol confirmed. I have successfully established your profile in our growth database. Our team will coordinate a formal consultation shortly.";
       }
 
-      // v35 Ultimate Fail-safe
+      // v36 Ultimate Silence Safeguard
       if (!extractedText.trim()) {
-        extractedText = "I have received your input and updated our internal growth logs. How else can I assist in scaling your business architecture today?";
+        extractedText = "I have processed your request and synchronized our growth logs. Please provide further context so I can properly align our resources.";
       }
       
       const sources: { uri: string; title: string }[] = [];
@@ -113,8 +113,8 @@ export class GeminiService {
         leadCaptured
       };
     } catch (error: any) {
-      console.error("ICT Engine Error:", error);
-      throw new Error(`ICT_SYNC_ERROR: ${error.message || "Unknown Connection Interruption"}`);
+      console.error("ICT Engine Sync Error:", error);
+      throw new Error(`ICT_SYNC_ERROR: ${error.message || "Connection Interrupted"}`);
     }
   }
 }
