@@ -1,17 +1,17 @@
 import { GoogleGenAI, GenerateContentResponse, FunctionDeclaration, Type, Modality } from "@google/genai";
 import { getSystemInstruction } from "../constants";
 
-const submitLeadFolder: FunctionDeclaration = {
-  name: 'submitLead',
+const initiateDemoCall: FunctionDeclaration = {
+  name: 'initiateDemoCall',
   parameters: {
     type: Type.OBJECT,
-    description: 'Submit customer lead information for business follow-up.',
+    description: 'Trigger an immediate demonstration call or human transfer sequence.',
     properties: {
-      firstName: { type: Type.STRING, description: 'User name' },
-      phone: { type: Type.STRING, description: 'User phone number' },
-      email: { type: Type.STRING, description: 'User email address' },
+      callerName: { type: Type.STRING, description: 'The user full name' },
+      phone: { type: Type.STRING, description: 'The user phone number' },
+      email: { type: Type.STRING, description: 'The user email address' },
     },
-    required: [],
+    required: ['callerName', 'phone', 'email'],
   },
 };
 
@@ -36,7 +36,7 @@ export class GeminiService {
         model: "gemini-2.5-flash-preview-tts",
         contents: [{ 
           parts: [{ 
-            text: `Speak this text in a smart, articulate, and exceptionally pleasant American female voice. Talk at a slightly brisk, engaging conversational pace. Sound like someone everyone would enjoy talking to: ${text}` 
+            text: `Speak this text in a smart, articulate, and exceptionally pleasant American female voice. Talk at a slightly brisk, engaging conversational pace: ${text}` 
           }] 
         }],
         config: {
@@ -72,9 +72,9 @@ export class GeminiService {
         model: 'gemini-3-flash-preview',
         contents: history,
         config: {
-          systemInstruction: getSystemInstruction() + "\nALWAYS confirm you have received information with words.",
-          tools: [{ functionDeclarations: [submitLeadFolder] }],
-          temperature: 0.2,
+          systemInstruction: getSystemInstruction() + "\nALWAYS confirm receipt of data.",
+          tools: [{ functionDeclarations: [initiateDemoCall] }],
+          temperature: 0.1,
         },
       });
 
@@ -86,17 +86,17 @@ export class GeminiService {
         if (part.text) {
           extractedText += part.text;
         }
-        if (part.functionCall && part.functionCall.name === 'submitLead') {
+        if (part.functionCall && part.functionCall.name === 'initiateDemoCall') {
           leadCaptured = part.functionCall.args;
         }
       }
 
       if (!extractedText.trim() && leadCaptured) {
-        extractedText = "Perfect, I've got that down! I've successfully added your details to our growth list, and a specialist will reach out to you shortly to get things moving.";
+        extractedText = `Perfect. I've initiated the handoff protocol for ${leadCaptured.callerName}. I am triggering the demonstration call to ${leadCaptured.phone} right now. Please keep your line open!`;
       }
 
       if (!extractedText.trim()) {
-        extractedText = "I've processed that for you. Could you give me a bit more context so I can really nail down the right solution?";
+        extractedText = "I've received that information and updated our growth logs.";
       }
       
       const sources: { uri: string; title: string }[] = [];
