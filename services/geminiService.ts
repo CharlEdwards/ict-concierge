@@ -28,6 +28,36 @@ export class GeminiService {
     return undefined;
   }
 
+  private getWebhookUrl(): string | undefined {
+    try {
+      // @ts-ignore
+      return import.meta.env?.VITE_WEBHOOK_URL || import.meta.env?.WEBHOOK_URL;
+    } catch (e) { return undefined; }
+  }
+
+  async triggerExternalCall(payload: { callerName: string; phone: string; email: string }) {
+    const webhookUrl = this.getWebhookUrl();
+    if (!webhookUrl) {
+      console.warn("ICT_LINK_NOTICE: No VITE_WEBHOOK_URL found. Call data logged but not transmitted.");
+      return;
+    }
+
+    try {
+      await fetch(webhookUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...payload,
+          source: 'ICT_CONCIERGE_V48',
+          timestamp: new Date().toISOString()
+        })
+      });
+      console.log("ICT_LINK_SUCCESS: Demo call signal transmitted.");
+    } catch (e) {
+      console.error("ICT_LINK_ERROR: Failed to transmit demo signal.", e);
+    }
+  }
+
   async generateVoice(text: string, apiKey: string): Promise<string | undefined> {
     if (!apiKey || !text) return undefined;
     try {
@@ -72,7 +102,7 @@ export class GeminiService {
         model: 'gemini-3-flash-preview',
         contents: history,
         config: {
-          systemInstruction: getSystemInstruction() + "\nALWAYS confirm receipt of data.",
+          systemInstruction: getSystemInstruction(),
           tools: [{ functionDeclarations: [initiateDemoCall] }],
           temperature: 0.1,
         },
@@ -91,12 +121,15 @@ export class GeminiService {
         }
       }
 
-      if (!extractedText.trim() && leadCaptured) {
-        extractedText = `Perfect. I've initiated the handoff protocol for ${leadCaptured.callerName}. I am triggering the demonstration call to ${leadCaptured.phone} right now. Please keep your line open!`;
+      if (leadCaptured) {
+        await this.triggerExternalCall(leadCaptured);
+        if (!extractedText.trim()) {
+          extractedText = `Understood, ${leadCaptured.callerName}. I've successfully established the link. I'm initiating the demonstration call to ${leadCaptured.phone} right now. One of our partners will be with you in a moment!`;
+        }
       }
 
       if (!extractedText.trim()) {
-        extractedText = "I've received that information and updated our growth logs.";
+        extractedText = "I've processed your data and updated our strategic logs. How else can I assist with your growth today?";
       }
       
       const sources: { uri: string; title: string }[] = [];
