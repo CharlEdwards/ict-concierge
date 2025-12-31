@@ -5,7 +5,7 @@ import { SUGGESTED_QUESTIONS, INDUSTRY_CONFIG } from './constants';
 import MessageItem from './components/MessageItem';
 import InputArea from './components/InputArea';
 
-const APP_VERSION = "v47.0 Strategic Demo Protocol";
+const APP_VERSION = "v48.0 Live Link Protocol";
 const WELCOME_TEXT = "Hi there! I'm your ICT partner. I'd love to help you navigate Google Workspace, secure your remote setup, or help you grow with some sharp SEO and GEO strategies. What can we tackle together today?";
 
 async function decodeAudioData(
@@ -177,11 +177,10 @@ const App: React.FC = () => {
       setMessages((prev) => [...prev, botMsg]);
 
       if (response.leadCaptured) {
-        // Special feedback for lead submission/demo call
         setMessages(prev => [...prev, {
           id: 'demo-' + Date.now(),
           role: Role.SYSTEM,
-          text: `PROTOCOL ENGAGED: Dialing ${response.leadCaptured.phone} for Demo...`,
+          text: `SIGNAL TRANSMITTED: Dialing ${response.leadCaptured.phone} for Demo...`,
           timestamp: Date.now()
         }]);
         playHardwareTestPing();
